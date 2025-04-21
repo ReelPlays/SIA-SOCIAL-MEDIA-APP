@@ -1,0 +1,38 @@
+type Account {
+  id: ID!
+  email: String!
+  firstName: String!
+  lastName: String!
+  address: String
+  phone: String
+  age: Int!
+  gender: String
+  createdAt: String!
+  updatedAt: String
+}
+
+type AuthResponse {
+  accessToken: String!
+  refreshToken: String!
+}
+
+input RegisterInput {
+  email: String!
+  password: String!
+  firstName: String!
+  lastName: String!
+  address: String
+  phone: String
+  age: Int!
+  gender: String
+}
+
+input LoginInput {
+  email: String!
+  password: String!
+}
+
+extend type Mutation {
+  register(input: RegisterInput!): Account!
+  login(input: LoginInput!): AuthResponse!
+}

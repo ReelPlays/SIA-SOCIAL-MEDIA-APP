@@ -1,0 +1,37 @@
+type Profile {
+  profileId: ID!
+  username: String!
+  email: String!
+  password: String!
+  firstName: String
+  middleName: String
+  lastName: String
+  bio: String
+  profilePictureUrl: String
+  bannerPictureUrl: String
+  dateOfBirth: String
+  address: String
+}
+
+input CreateProfileInput {
+  username: String!
+  email: String!
+  password: String!
+  firstName: String
+  middleName: String
+  lastName: String
+  bio: String
+  profilePictureUrl: String
+  bannerPictureUrl: String
+  dateOfBirth: String
+  address: String
+}
+
+extend type Mutation {
+  createProfile(input: CreateProfileInput!): Profile!
+}
+
+extend type Query {
+  getProfile(profileId: ID!): Profile!
+  listProfiles: [Profile!]!
+}
