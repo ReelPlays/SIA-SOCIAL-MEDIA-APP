@@ -15,7 +15,24 @@ func (r *mutationResolver) Register(ctx context.Context, input model.RegisterInp
 	panic(fmt.Errorf("not implemented: Register - register"))
 }
 
-// Login is the resolver for the login field.
-func (r *mutationResolver) Login(ctx context.Context, input model.LoginInput) (*model.AuthResponse, error) {
+// GetAccount is the resolver for the getAccount field.
+func (r *queryResolver) GetAccount(ctx context.Context, accountID string) (*model.Account, error) {
+	panic(fmt.Errorf("not implemented: GetAccount - getAccount"))
+}
+
+// ListAccounts is the resolver for the listAccounts field.
+func (r *queryResolver) ListAccounts(ctx context.Context) ([]*model.Account, error) {
+	panic(fmt.Errorf("not implemented: ListAccounts - listAccounts"))
+}
+
+// !!! WARNING !!!
+// The code below was going to be deleted when updating resolvers. It has been copied here so you have
+// one last chance to move it out of harms way if you want. There are two reasons this happens:
+//  - When renaming or deleting a resolver the old code will be put in here. You can safely delete
+//    it when you're done.
+//  - You have helper methods in this file. Move them out to keep these resolver files clean.
+/*
+	func (r *mutationResolver) Login(ctx context.Context, input model.LoginInput) (*model.AuthResponse, error) {
 	panic(fmt.Errorf("not implemented: Login - login"))
 }
+*/

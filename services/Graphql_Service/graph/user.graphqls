@@ -1,5 +1,5 @@
 type Account {
-  id: ID!
+  accountId: ID!
   email: String!
   firstName: String!
   lastName: String!
@@ -9,11 +9,6 @@ type Account {
   gender: String
   createdAt: String!
   updatedAt: String
-}
-
-type AuthResponse {
-  accessToken: String!
-  refreshToken: String!
 }
 
 input RegisterInput {
@@ -27,12 +22,11 @@ input RegisterInput {
   gender: String
 }
 
-input LoginInput {
-  email: String!
-  password: String!
-}
-
 extend type Mutation {
   register(input: RegisterInput!): Account!
-  login(input: LoginInput!): AuthResponse!
+}
+
+extend type Query {
+  getAccount(accountId: ID!): Account!
+  listAccounts: [Account!]!
 }

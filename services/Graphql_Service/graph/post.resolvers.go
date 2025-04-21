@@ -16,7 +16,7 @@ func (r *mutationResolver) CreatePost(ctx context.Context, input model.CreatePos
 }
 
 // GetPost is the resolver for the getPost field.
-func (r *queryResolver) GetPost(ctx context.Context, id string) (*model.Post, error) {
+func (r *queryResolver) GetPost(ctx context.Context, postID string) (*model.Post, error) {
 	panic(fmt.Errorf("not implemented: GetPost - getPost"))
 }
 

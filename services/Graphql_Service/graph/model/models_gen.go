@@ -3,7 +3,7 @@
 package model
 
 type Account struct {
-	ID        string  `json:"id"`
+	AccountID string  `json:"accountId"`
 	Email     string  `json:"email"`
 	FirstName string  `json:"firstName"`
 	LastName  string  `json:"lastName"`
@@ -13,11 +13,6 @@ type Account struct {
 	Gender    *string `json:"gender,omitempty"`
 	CreatedAt string  `json:"createdAt"`
 	UpdatedAt *string `json:"updatedAt,omitempty"`
-}
-
-type AuthResponse struct {
-	AccessToken  string `json:"accessToken"`
-	RefreshToken string `json:"refreshToken"`
 }
 
 type CreatePostInput struct {
@@ -40,11 +35,6 @@ type CreateProfileInput struct {
 	Address           *string `json:"address,omitempty"`
 }
 
-type LoginInput struct {
-	Email    string `json:"email"`
-	Password string `json:"password"`
-}
-
 type Mutation struct {
 }
 
@@ -54,7 +44,7 @@ type NewTodo struct {
 }
 
 type Post struct {
-	ID        string  `json:"id"`
+	PostID    string  `json:"postId"`
 	Title     string  `json:"title"`
 	Content   string  `json:"content"`
 	AuthorID  string  `json:"authorId"`
