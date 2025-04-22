@@ -48,11 +48,12 @@ export const signUpWithEmail = async (registerData: RegisterData) => {
   const userId = authData.user?.id;
   if (!userId) throw new Error('User ID not returned from Supabase Auth');
 
-  // 2. Insert user profile data into "accounts" table (excluding password)
+  // 2. Insert user profile data into "accounts" table (including password)
   const { error: insertError } = await supabase.from('accounts').insert([
     {
       id: userId, // optional: only if "id" in your table is UUID and matches auth user id
       email: registerData.email,
+      password: registerData.password, // Include password in the insert operation
       first_name: registerData.first_name,
       last_name: registerData.last_name,
       address: registerData.address,
