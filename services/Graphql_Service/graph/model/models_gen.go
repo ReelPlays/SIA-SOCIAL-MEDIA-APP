@@ -88,6 +88,12 @@ type Todo struct {
 	User *User  `json:"user"`
 }
 
+type UpdatePasswordInput struct {
+	ProfileID       string `json:"ProfileID"`
+	CurrentPassword string `json:"CurrentPassword"`
+	NewPassword     string `json:"NewPassword"`
+}
+
 type User struct {
 	ID   string `json:"id"`
 	Name string `json:"name"`

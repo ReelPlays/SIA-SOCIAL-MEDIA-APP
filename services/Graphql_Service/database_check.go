@@ -6,11 +6,11 @@ import (
 	"log"
 	"os"
 
-	_ "github.com/lib/pq"
 	"github.com/joho/godotenv"
+	_ "github.com/lib/pq"
 )
 
-func main() {
+func init() {
 	// Load environment variables from .env file
 	err := godotenv.Load("c:\\Users\\KEITH\\ProjectSIA\\.env")
 	if err != nil {

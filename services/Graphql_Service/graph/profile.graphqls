@@ -13,6 +13,21 @@ type Profile {
   address: String
 }
 
+input UpdatePasswordInput {
+  ProfileID: ID!
+  CurrentPassword: String!
+  NewPassword: String!
+}
+
+extend type Mutation {
+  updatePassword(input: UpdatePasswordInput!): Profile!
+}
+
+extend type Query {
+  getProfile(profileId: ID!): Profile!
+  listProfiles: [Profile!]!
+}
+
 input CreateProfileInput {
   username: String!
   email: String!
@@ -29,9 +44,4 @@ input CreateProfileInput {
 
 extend type Mutation {
   createProfile(input: CreateProfileInput!): Profile!
-}
-
-extend type Query {
-  getProfile(profileId: ID!): Profile!
-  listProfiles: [Profile!]!
 }
