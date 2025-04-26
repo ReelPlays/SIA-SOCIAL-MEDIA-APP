@@ -37,13 +37,25 @@ export const LoginForm: React.FC = () => {
 
   return (
     <Container
-      maxWidth="xs"
       sx={{
         display: 'flex',
-        justifyContent: 'center',
+        justifyContent: 'flex-end',
         alignItems: 'center',
         minHeight: '100vh',
+        width: '100%',
+        maxWidth: '100%',
+        margin: 0,
         padding: 0,
+        backgroundImage: 'url(/login-bg.svg)',
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+        backgroundRepeat: 'no-repeat',
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        overflowY: 'auto'
       }}
     >
       <Box
@@ -52,6 +64,11 @@ export const LoginForm: React.FC = () => {
           flexDirection: 'column',
           alignItems: 'center',
           width: '100%',
+          maxWidth: 400,
+          backgroundColor: '#f5f5f5',
+          padding: 3,
+          borderRadius: 2,
+          boxShadow: 3,
         }}
       >
         <Typography component="h1" variant="h5">

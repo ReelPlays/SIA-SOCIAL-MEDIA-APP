@@ -7,8 +7,10 @@ import (
 	"graphql/graph/model"
 	"log"
 	"os"
+	"time"
 
 	_ "github.com/lib/pq"
+	"github.com/rabbitmq/amqp091-go"
 )
 
 // Register is the resolver for the register field.
@@ -34,9 +36,54 @@ func (r *mutationResolver) Register(ctx context.Context, input model.RegisterInp
 		return nil, fmt.Errorf("internal error")
 	}
 
+	// Publish a message to RabbitMQ
+	rabbitmqURL := os.Getenv("RABBITMQ_URL") // Example: "amqp://guest:guest@localhost:5672/"
+	conn, err := amqp091.Dial(rabbitmqURL)
+	if err != nil {
+		log.Printf("failed to connect to RabbitMQ: %v", err)
+		// Optional: You can continue even if RabbitMQ fails
+	} else {
+		defer conn.Close()
+
+		ch, err := conn.Channel()
+		if err != nil {
+			log.Printf("failed to open a channel: %v", err)
+		} else {
+			defer ch.Close()
+
+			q, err := ch.QueueDeclare(
+				"user_registered", // Queue name
+				true,              // Durable
+				false,             // Delete when unused
+				false,             // Exclusive
+				false,             // No-wait
+				nil,               // Arguments
+			)
+			if err != nil {
+				log.Printf("failed to declare a queue: %v", err)
+			}
+
+			body := fmt.Sprintf(`{"accountId":"%s","email":"%s"}`, accountID, input.Email)
+			err = ch.PublishWithContext(ctx,
+				"",     // Exchange
+				q.Name, // Routing key
+				false,  // Mandatory
+				false,  // Immediate
+				amqp091.Publishing{
+					ContentType: "application/json",
+					Body:        []byte(body),
+					Timestamp:   time.Now(),
+				},
+			)
+			if err != nil {
+				log.Printf("failed to publish a message: %v", err)
+			}
+		}
+	}
+
 	// Return the created account
 	return &model.Account{
-		AccountID: accountID, // Corrected field name
+		AccountID: accountID,
 		Email:     input.Email,
 		FirstName: input.FirstName,
 		LastName:  input.LastName,
