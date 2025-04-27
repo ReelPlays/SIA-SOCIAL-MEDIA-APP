@@ -18,7 +18,7 @@ export const LoginForm: React.FC = () => {
     setLoading(true);
     try {
       await signInWithEmail(formData.email, formData.password);
-      navigate('/');
+      navigate('/profile'); // Redirect to profile page after successful login
     } catch (err: any) {
       console.error('Login failed:', err);
       setError(err.message || 'An unexpected error occurred.');

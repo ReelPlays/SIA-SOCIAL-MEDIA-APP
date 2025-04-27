@@ -6,19 +6,18 @@ import (
 	"log"
 	"os"
 
-	_ "github.com/lib/pq"
 	"github.com/joho/godotenv"
+	_ "github.com/lib/pq"
 )
 
 func main() {
-	// Load environment variables from .env file
-	err := godotenv.Load("c:\\Users\\KEITH\\ProjectSIA\\.env")
+	err := godotenv.Load()
 	if err != nil {
 		log.Fatalf("Error loading .env file")
 	}
 
-	connStr := os.Getenv("USER_TABLE_DB")
-	fmt.Println("Connection String:", connStr) // Debugging line
+	connStr := os.Getenv("DATABASE_URL")
+	fmt.Println("Connection String:", connStr)
 
 	db, err := sql.Open("postgres", connStr)
 	if err != nil {
@@ -31,5 +30,5 @@ func main() {
 		log.Fatalf("failed to ping the database: %v", err)
 	}
 
-	fmt.Println("Successfully connected to the database!")
+	fmt.Println("Connected successfully!")
 }
