@@ -44,12 +44,13 @@ type NewTodo struct {
 }
 
 type Post struct {
-	PostID    string  `json:"postId"`
-	Title     string  `json:"title"`
-	Content   string  `json:"content"`
-	AuthorID  string  `json:"authorId"`
-	CreatedAt string  `json:"createdAt"`
-	UpdatedAt *string `json:"updatedAt,omitempty"`
+	PostID    string   `json:"postId"`
+	Title     string   `json:"title"`
+	Content   string   `json:"content"`
+	AuthorID  string   `json:"authorId"`
+	Author    *Account `json:"author"`
+	CreatedAt string   `json:"createdAt"`
+	UpdatedAt *string  `json:"updatedAt,omitempty"`
 }
 
 type Profile struct {

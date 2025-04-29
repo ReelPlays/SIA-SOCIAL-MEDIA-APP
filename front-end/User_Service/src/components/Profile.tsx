@@ -225,9 +225,16 @@ export default function Profile() {
     <Container maxWidth="sm" sx={{ py: 6 }}>
       <Paper elevation={3} sx={{ p: 4, borderRadius: 3 }}>
         <Box textAlign="center">
-          <Avatar sx={{ width: 120, height: 120, mx: 'auto', mb: 2, bgcolor: 'primary.main', fontSize: 40 }}>
-            {account.firstName[0]}
-          </Avatar>
+          <Avatar sx={{ 
+  width: 150,  // Increased from 120
+  height: 150, // Increased from 120
+  mx: 'auto', 
+  mb: 2, 
+  bgcolor: 'primary.main', 
+  fontSize: 60 // Increased from 40
+}}>
+  {account.firstName[0]}
+</Avatar>
           {editMode ? (
             <Stack direction="row" spacing={2} mb={2}>
               <TextField label="First Name" value={firstName} onChange={(e) => setFirstName(e.target.value)} size="small" />

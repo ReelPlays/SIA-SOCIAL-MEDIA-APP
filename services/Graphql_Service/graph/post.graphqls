@@ -1,23 +1,30 @@
+# Post type definition with embedded user info
 type Post {
   postId: ID!
   title: String!
   content: String!
   authorId: ID!
+  author: Account!        # Resolved from the User service
   createdAt: String!
   updatedAt: String
 }
 
+# Input type for creating a post
 input CreatePostInput {
   title: String!
   content: String!
   authorId: ID!
 }
 
+# Mutations for creating posts
 extend type Mutation {
   createPost(input: CreatePostInput!): Post!
 }
 
+# Queries for retrieving posts
 extend type Query {
   getPost(postId: ID!): Post!
   listPosts: [Post!]!
 }
+
+# Local copy of Account type (import or federate in production)

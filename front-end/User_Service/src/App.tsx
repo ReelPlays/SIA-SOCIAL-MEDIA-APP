@@ -1,9 +1,12 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { ApolloProvider } from '@apollo/client';
-import { CssBaseline, ThemeProvider, createTheme } from '@mui/material';
+import { CssBaseline, ThemeProvider, createTheme, Box } from '@mui/material';
 import { LoginForm } from './components/LoginForm';
 import { SignupForm } from './components/SignupForm';
 import Profile from './components/Profile';
+import PostForm from './components/PostForm';
+import Posts from './components/Posts';
+import Navigation from './components/Navigation';
 import { client } from './lib/apollo';
 
 // Create a custom theme
@@ -31,12 +34,17 @@ function App() {
       <ThemeProvider theme={theme}>
         <CssBaseline />
         <Router>
-          <Routes>
-            <Route path="/login" element={<LoginForm />} />
-            <Route path="/signup" element={<SignupForm />} />
-            <Route path="/profile" element={<Profile />} />
-            <Route path="/" element={<Navigate to="/login" replace />} />
-          </Routes>
+          <Navigation />
+          <Box sx={{ pt: 2 }}>
+            <Routes>
+              <Route path="/login" element={<LoginForm />} />
+              <Route path="/signup" element={<SignupForm />} />
+              <Route path="/profile" element={<Profile />} />
+              <Route path="/posts" element={<Posts />} />
+              <Route path="/create-post" element={<PostForm />} />
+              <Route path="/" element={<Navigate to="/posts" replace />} />
+            </Routes>
+          </Box>
         </Router>
       </ThemeProvider>
     </ApolloProvider>
