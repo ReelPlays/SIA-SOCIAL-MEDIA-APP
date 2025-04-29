@@ -22,6 +22,7 @@ type CreatePostInput struct {
 }
 
 type CreateProfileInput struct {
+	AccountID         string  `json:"accountId"`
 	Username          string  `json:"username"`
 	Email             string  `json:"email"`
 	Password          string  `json:"password"`

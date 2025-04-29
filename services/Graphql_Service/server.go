@@ -31,7 +31,10 @@ func main() {
 
 	//Get Database URLS from .env
 
-	srv := handler.New(graph.NewExecutableSchema(graph.Config{Resolvers: &graph.Resolver{}}))
+	// Initialize resolver with database connection
+	resolver := graph.NewResolver()
+
+	srv := handler.New(graph.NewExecutableSchema(graph.Config{Resolvers: resolver}))
 
 	srv.AddTransport(transport.Options{})
 	srv.AddTransport(transport.GET{})

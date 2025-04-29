@@ -6,21 +6,295 @@ package graph
 
 import (
 	"context"
+	"database/sql"
 	"fmt"
 	"graphql/graph/model"
+	"log"
+	"os"
+
+	_ "github.com/lib/pq"
 )
+
+// Database connection helper function
+func getDB() (*sql.DB, error) {
+	connStr := os.Getenv("DATABASE_URL")
+	db, err := sql.Open("postgres", connStr)
+	if err != nil {
+		return nil, fmt.Errorf("failed to connect to database: %v", err)
+	}
+
+	err = db.Ping()
+	if err != nil {
+		db.Close()
+		return nil, fmt.Errorf("failed to ping database: %v", err)
+	}
+
+	return db, nil
+}
 
 // CreateProfile is the resolver for the createProfile field.
 func (r *mutationResolver) CreateProfile(ctx context.Context, input model.CreateProfileInput) (*model.Profile, error) {
-	panic(fmt.Errorf("not implemented: CreateProfile - createProfile"))
+	db, err := getDB()
+	if err != nil {
+		log.Printf("Database connection error: %v", err)
+		return nil, err
+	}
+	defer db.Close()
+
+	// Validate that AccountID is not empty
+	if input.AccountID == "" {
+		return nil, fmt.Errorf("accountId cannot be empty")
+	}
+
+	// Use the provided AccountID as the profile ID
+	profileID := input.AccountID
+
+	// Insert the profile into the database
+	query := `
+		INSERT INTO profiles (
+			profile_id, username, email, password, first_name, middle_name, last_name, 
+			bio, profile_picture_url, banner_picture_url, date_of_birth, address
+		) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
+		RETURNING profile_id
+	`
+
+	// Prepare values for the query
+	var firstName, middleName, lastName, bio, profilePictureURL, bannerPictureURL, dateOfBirth, address *string
+	if input.FirstName != nil {
+		firstName = input.FirstName
+	}
+	if input.MiddleName != nil {
+		middleName = input.MiddleName
+	}
+	if input.LastName != nil {
+		lastName = input.LastName
+	}
+	if input.Bio != nil {
+		bio = input.Bio
+	}
+	if input.ProfilePictureURL != nil {
+		profilePictureURL = input.ProfilePictureURL
+	}
+	if input.BannerPictureURL != nil {
+		bannerPictureURL = input.BannerPictureURL
+	}
+	if input.DateOfBirth != nil {
+		dateOfBirth = input.DateOfBirth
+	}
+	if input.Address != nil {
+		address = input.Address
+	}
+
+	// Execute the query
+	err = db.QueryRowContext(
+		ctx,
+		query,
+		profileID,
+		input.Username,
+		input.Email,
+		input.Password,
+		firstName,
+		middleName,
+		lastName,
+		bio,
+		profilePictureURL,
+		bannerPictureURL,
+		dateOfBirth,
+		address,
+	).Scan(&profileID)
+
+	if err != nil {
+		log.Printf("Error creating profile: %v", err)
+		return nil, fmt.Errorf("failed to create profile: %v", err)
+	}
+
+	// Return the created profile
+	return &model.Profile{
+		ProfileID:         profileID,
+		Username:          input.Username,
+		Email:             input.Email,
+		Password:          input.Password,
+		FirstName:         firstName,
+		MiddleName:        middleName,
+		LastName:          lastName,
+		Bio:               bio,
+		ProfilePictureURL: profilePictureURL,
+		BannerPictureURL:  bannerPictureURL,
+		DateOfBirth:       dateOfBirth,
+		Address:           address,
+	}, nil
 }
 
 // GetProfile is the resolver for the getProfile field.
 func (r *queryResolver) GetProfile(ctx context.Context, profileID string) (*model.Profile, error) {
-	panic(fmt.Errorf("not implemented: GetProfile - getProfile"))
+	db, err := getDB()
+	if err != nil {
+		log.Printf("Database connection error: %v", err)
+		return nil, err
+	}
+	defer db.Close()
+
+	// Query to get profile by ID
+	query := `
+		SELECT profile_id, username, email, password, first_name, middle_name, last_name, 
+		       bio, profile_picture_url, banner_picture_url, date_of_birth, address
+		FROM profiles
+		WHERE profile_id = $1
+	`
+
+	var profile model.Profile
+	var firstName, middleName, lastName, bio, profilePictureURL, bannerPictureURL, dateOfBirth, address sql.NullString
+
+	err = db.QueryRowContext(ctx, query, profileID).Scan(
+		&profile.ProfileID,
+		&profile.Username,
+		&profile.Email,
+		&profile.Password,
+		&firstName,
+		&middleName,
+		&lastName,
+		&bio,
+		&profilePictureURL,
+		&bannerPictureURL,
+		&dateOfBirth,
+		&address,
+	)
+
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil, fmt.Errorf("profile not found")
+		}
+		log.Printf("Error fetching profile: %v", err)
+		return nil, fmt.Errorf("failed to fetch profile: %v", err)
+	}
+
+	// Convert sql.NullString to *string for the model
+	if firstName.Valid {
+		firstNameStr := firstName.String
+		profile.FirstName = &firstNameStr
+	}
+	if middleName.Valid {
+		middleNameStr := middleName.String
+		profile.MiddleName = &middleNameStr
+	}
+	if lastName.Valid {
+		lastNameStr := lastName.String
+		profile.LastName = &lastNameStr
+	}
+	if bio.Valid {
+		bioStr := bio.String
+		profile.Bio = &bioStr
+	}
+	if profilePictureURL.Valid {
+		profilePicStr := profilePictureURL.String
+		profile.ProfilePictureURL = &profilePicStr
+	}
+	if bannerPictureURL.Valid {
+		bannerPicStr := bannerPictureURL.String
+		profile.BannerPictureURL = &bannerPicStr
+	}
+	if dateOfBirth.Valid {
+		dateOfBirthStr := dateOfBirth.String
+		profile.DateOfBirth = &dateOfBirthStr
+	}
+	if address.Valid {
+		addressStr := address.String
+		profile.Address = &addressStr
+	}
+
+	return &profile, nil
 }
 
 // ListProfiles is the resolver for the listProfiles field.
 func (r *queryResolver) ListProfiles(ctx context.Context) ([]*model.Profile, error) {
-	panic(fmt.Errorf("not implemented: ListProfiles - listProfiles"))
+	db, err := getDB()
+	if err != nil {
+		log.Printf("Database connection error: %v", err)
+		return nil, err
+	}
+	defer db.Close()
+
+	// Query to get all profiles
+	query := `
+		SELECT profile_id, username, email, password, first_name, middle_name, last_name, 
+		       bio, profile_picture_url, banner_picture_url, date_of_birth, address
+		FROM profiles
+	`
+
+	rows, err := db.QueryContext(ctx, query)
+	if err != nil {
+		log.Printf("Error fetching profiles: %v", err)
+		return nil, fmt.Errorf("failed to fetch profiles: %v", err)
+	}
+	defer rows.Close()
+
+	var profiles []*model.Profile
+
+	for rows.Next() {
+		var profile model.Profile
+		var firstName, middleName, lastName, bio, profilePictureURL, bannerPictureURL, dateOfBirth, address sql.NullString
+
+		err := rows.Scan(
+			&profile.ProfileID,
+			&profile.Username,
+			&profile.Email,
+			&profile.Password,
+			&firstName,
+			&middleName,
+			&lastName,
+			&bio,
+			&profilePictureURL,
+			&bannerPictureURL,
+			&dateOfBirth,
+			&address,
+		)
+
+		if err != nil {
+			log.Printf("Error scanning profile row: %v", err)
+			continue
+		}
+
+		// Convert sql.NullString to *string for the model
+		if firstName.Valid {
+			firstNameStr := firstName.String
+			profile.FirstName = &firstNameStr
+		}
+		if middleName.Valid {
+			middleNameStr := middleName.String
+			profile.MiddleName = &middleNameStr
+		}
+		if lastName.Valid {
+			lastNameStr := lastName.String
+			profile.LastName = &lastNameStr
+		}
+		if bio.Valid {
+			bioStr := bio.String
+			profile.Bio = &bioStr
+		}
+		if profilePictureURL.Valid {
+			profilePicStr := profilePictureURL.String
+			profile.ProfilePictureURL = &profilePicStr
+		}
+		if bannerPictureURL.Valid {
+			bannerPicStr := bannerPictureURL.String
+			profile.BannerPictureURL = &bannerPicStr
+		}
+		if dateOfBirth.Valid {
+			dateOfBirthStr := dateOfBirth.String
+			profile.DateOfBirth = &dateOfBirthStr
+		}
+		if address.Valid {
+			addressStr := address.String
+			profile.Address = &addressStr
+		}
+
+		profiles = append(profiles, &profile)
+	}
+
+	if err := rows.Err(); err != nil {
+		log.Printf("Error iterating profile rows: %v", err)
+		return nil, fmt.Errorf("error fetching profiles: %v", err)
+	}
+
+	return profiles, nil
 }

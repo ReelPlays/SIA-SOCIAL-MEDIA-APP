@@ -1,0 +1,61 @@
+# Test queries for Profile Service
+
+# 1. Create a new profile
+mutation CreateProfile {
+  createProfile(input: {
+    accountId: "acc123" # This should be a valid account ID from your accounts table
+    username: "testuser"
+    email: "test@example.com"
+    password: "securepassword"
+    firstName: "Test"
+    lastName: "User"
+    bio: "This is a test profile"
+    profilePictureUrl: "https://example.com/profile.jpg"
+    bannerPictureUrl: "https://example.com/banner.jpg"
+    dateOfBirth: "1990-01-01"
+    address: "123 Test Street"
+  }) {
+    profileId
+    username
+    email
+    firstName
+    lastName
+    bio
+    profilePictureUrl
+    bannerPictureUrl
+    dateOfBirth
+    address
+  }
+}
+
+# 2. Get a profile by ID
+query GetProfile {
+  getProfile(profileId: "acc123") {
+    profileId
+    username
+    email
+    firstName
+    lastName
+    bio
+    profilePictureUrl
+    bannerPictureUrl
+    dateOfBirth
+    address
+  }
+}
+
+# 3. List all profiles
+query ListProfiles {
+  listProfiles {
+    profileId
+    username
+    email
+    firstName
+    lastName
+    bio
+    profilePictureUrl
+    bannerPictureUrl
+    dateOfBirth
+    address
+  }
+}
