@@ -192,108 +192,62 @@ export default function Navigation() {
 
   return (
     <Box sx={{ flexGrow: 1 }}>
-      <AppBar position="static">
+      <AppBar position="fixed" sx={{ backgroundColor: 'white', boxShadow: 1 }}>
         <Toolbar>
-          {isMobile && user && ( // Only show drawer toggle if mobile and logged in
-            <IconButton
-              color="inherit"
-              aria-label="open drawer"
-              edge="start"
-              onClick={handleDrawerToggle}
-              sx={{ mr: 2 }}
-            >
-              <MenuIcon />
-            </IconButton>
-          )}
-
-          <Typography
-            variant="h6"
-            noWrap
-            component="div"
-            sx={{ display: { xs: 'none', sm: 'block' }, cursor: 'pointer' }}
-            onClick={() => navigate('/posts')}
-          >
-            SIA Social
+          <Typography variant="h6" component="div" sx={{ flexGrow: 1, color: '#815DAB', fontWeight: 'bold' }}>
+            ConnectMe
           </Typography>
-
-          {/* Central Navigation Buttons for Desktop */}
-          {!isMobile && user && (
-            <Container
-              maxWidth="md"
-              sx={{
-                display: 'flex',
-                justifyContent: 'center',
-                position: 'absolute',
-                left: '50%',
-                transform: 'translateX(-50%)'
-              }}
-            >
-              <Button
-                color="inherit"
-                startIcon={<HomeIcon />}
-                onClick={() => navigate('/posts')}
-                sx={{ mx: 1 }}
-              >
-                Posts
-              </Button>
-              {/* Add Notification Icon Button */}
-              <IconButton
-                 size="large"
-                 aria-label="show new notifications"
-                 color="inherit"
-                 onClick={handleNotificationClick}
-                 sx={{ mx: 1 }}
-              >
-                 <Badge badgeContent={unreadCount} color="error">
-                    <NotificationsIcon />
-                 </Badge>
+          
+          {user && (
+            <Box sx={{ display: 'flex' }}>
+              <IconButton color="inherit" onClick={() => navigate('/posts')}>
+                <HomeIcon sx={{ color: '#333' }} />
               </IconButton>
-              <Button
-                color="inherit"
-                startIcon={<AddIcon />}
-                onClick={() => navigate('/create-post')}
-                sx={{ mx: 1 }}
+              <IconButton 
+                color="inherit" 
+                onClick={handleNotificationClick}
               >
-                Create Post
-              </Button>
-              {/* Profile and Logout moved to Avatar menu */}
-            </Container>
+                <Badge badgeContent={unreadCount} color="error">
+                  <NotificationsIcon sx={{ color: '#333' }} />
+                </Badge>
+              </IconButton>
+              <IconButton color="inherit" onClick={() => navigate('/create-post')}>
+                <AddIcon sx={{ color: '#333' }} />
+              </IconButton>
+              <IconButton
+                edge="end"
+                aria-label="account of current user"
+                aria-controls={menuId}
+                aria-haspopup="true"
+                onClick={handleProfileMenuOpen}
+                color="inherit"
+              >
+                <Avatar sx={{ width: 32, height: 32, bgcolor: '#815DAB' }}>
+                  {user.email ? user.email[0].toUpperCase() : '?'}
+                </Avatar>
+              </IconButton>
+            </Box>
           )}
-
-          <Box sx={{ flexGrow: 1 }} /> {/* Pushes items to the right */}
-
-          {/* Right side items (Login/Avatar Menu) */}
-          {user ? (
-            <IconButton
-              size="large" // Consistent sizing
-              edge="end"
-              aria-label="account of current user"
-              aria-controls={menuId}
-              aria-haspopup="true"
-              onClick={handleProfileMenuOpen}
-              color="inherit"
+          
+          {!user && (
+            <Button 
+              color="inherit" 
+              onClick={() => navigate('/login')}
+              sx={{ color: '#815DAB' }}
             >
-              <Avatar sx={{ width: 32, height: 32, bgcolor: 'secondary.main' }}>
-                {user.email ? user.email[0].toUpperCase() : '?'}
-              </Avatar>
-            </IconButton>
-          ) : (
-             !isMobile && ( // Don't show login button on mobile if drawer is used
-                <Button color="inherit" onClick={() => navigate('/login')}>
-                   Login
-                </Button>
-             )
+              Login
+            </Button>
           )}
         </Toolbar>
       </AppBar>
 
-      {/* Mobile Drawer */}
+      {/* Mobile Drawer - keep this for mobile responsiveness */}
       <Drawer
         variant="temporary"
         open={mobileOpen}
         onClose={handleDrawerToggle}
         ModalProps={{
-          keepMounted: true, // Better open performance on mobile
+          keepMounted: true,
         }}
         sx={{
           display: { xs: 'block', sm: 'none' },
@@ -305,6 +259,9 @@ export default function Navigation() {
 
       {/* Profile Menu */}
       {renderMenu}
+      
+      {/* Add padding to account for fixed AppBar */}
+      <Box sx={{ height: { xs: 56, sm: 64 } }} />
     </Box>
   );
 }
