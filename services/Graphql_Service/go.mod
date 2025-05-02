@@ -4,9 +4,11 @@ go 1.24.0
 
 require (
 	github.com/99designs/gqlgen v0.17.72
+	github.com/golang-jwt/jwt/v5 v5.2.2
 	github.com/joho/godotenv v1.5.1
 	github.com/lib/pq v1.10.9
 	github.com/rabbitmq/amqp091-go v1.10.0
+	github.com/rs/cors v1.11.1
 	github.com/vektah/gqlparser/v2 v2.5.25
 )
 

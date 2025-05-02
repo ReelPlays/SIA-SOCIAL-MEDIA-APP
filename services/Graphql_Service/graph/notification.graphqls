@@ -1,0 +1,21 @@
+# graph/notification.graphqls
+
+"Represents a notification for a user."
+type Notification {
+  notificationId: ID!
+  recipientUserId: ID!
+  triggeringUser: Account # User who caused the notification (e.g., post author) - nullable
+  notificationType: String! # e.g., 'new_post'
+  entityId: ID # ID of the related entity (e.g., post ID) - nullable
+  isRead: Boolean!
+  createdAt: String! # Or use a custom DateTime scalar
+}
+
+extend type Query {
+  "Fetches the logged-in user's notifications."
+  getMyNotifications(
+    filter: String # e.g., "unread", "all"
+    limit: Int = 20
+    offset: Int = 0
+  ): [Notification!]!
+}

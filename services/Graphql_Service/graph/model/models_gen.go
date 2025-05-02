@@ -3,16 +3,17 @@
 package model
 
 type Account struct {
-	AccountID string  `json:"accountId"`
-	Email     string  `json:"email"`
-	FirstName string  `json:"firstName"`
-	LastName  string  `json:"lastName"`
-	Address   *string `json:"address,omitempty"`
-	Phone     *string `json:"phone,omitempty"`
-	Age       int32   `json:"age"`
-	Gender    *string `json:"gender,omitempty"`
-	CreatedAt string  `json:"createdAt"`
-	UpdatedAt *string `json:"updatedAt,omitempty"`
+	AccountID   string  `json:"accountId"`
+	Email       string  `json:"email"`
+	FirstName   string  `json:"firstName"`
+	LastName    string  `json:"lastName"`
+	Address     *string `json:"address,omitempty"`
+	Phone       *string `json:"phone,omitempty"`
+	Age         int32   `json:"age"`
+	Gender      *string `json:"gender,omitempty"`
+	IsFollowing *bool   `json:"isFollowing,omitempty"`
+	CreatedAt   string  `json:"createdAt"`
+	UpdatedAt   *string `json:"updatedAt,omitempty"`
 }
 
 type CreatePostInput struct {
@@ -41,6 +42,17 @@ type Mutation struct {
 type NewTodo struct {
 	Text   string `json:"text"`
 	UserID string `json:"userId"`
+}
+
+// Represents a notification for a user.
+type Notification struct {
+	NotificationID   string   `json:"notificationId"`
+	RecipientUserID  string   `json:"recipientUserId"`
+	TriggeringUser   *Account `json:"triggeringUser,omitempty"`
+	NotificationType string   `json:"notificationType"`
+	EntityID         *string  `json:"entityId,omitempty"`
+	IsRead           bool     `json:"isRead"`
+	CreatedAt        string   `json:"createdAt"`
 }
 
 type Post struct {

@@ -1,5 +1,6 @@
-import { useState } from 'react';
+import React, { useState, useEffect } from 'react'; // Import useEffect
 import { useNavigate, useLocation } from 'react-router-dom';
+import { useQuery } from '@apollo/client'; // Import useQuery
 import {
   AppBar,
   Toolbar,
@@ -19,6 +20,7 @@ import {
   ListItemIcon,
   ListItemText,
   Container,
+  Badge, // Import Badge
 } from '@mui/material';
 import {
   Menu as MenuIcon,
@@ -27,49 +29,88 @@ import {
   Person as PersonIcon,
   Login as LoginIcon,
   Logout as LogoutIcon,
+  Notifications as NotificationsIcon, // Import NotificationsIcon
 } from '@mui/icons-material';
 import { supabase } from '../lib/supabase';
+import { GET_MY_NOTIFICATIONS } from '../graphql/queries'; // Import the query
 
 export default function Navigation() {
   const navigate = useNavigate();
   const location = useLocation();
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
-  
+
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [user, setUser] = useState<any>(null);
-  
-  // Check if user is logged in
-  useState(() => {
+
+  // Fetch Notifications Query
+  const { data: notificationData, loading: notificationLoading, error: notificationError, refetch: refetchNotifications } = useQuery(GET_MY_NOTIFICATIONS, {
+    variables: { filter: 'unread', limit: 100 }, // Fetch up to 100 unread notifications for count
+    skip: !user, // Skip query if user is not logged in
+    pollInterval: 30000, // Optional: Poll every 30 seconds
+    fetchPolicy: 'network-only', // Ensure fresh data is fetched
+    notifyOnNetworkStatusChange: true, // Useful for showing loading states
+  });
+
+  // Calculate unread count
+  const unreadCount = notificationData?.getMyNotifications?.length || 0;
+
+  // Check if user is logged in and refetch notifications on user change
+  useEffect(() => {
     const checkUser = async () => {
       const { data } = await supabase.auth.getUser();
       setUser(data.user);
+      if (data.user) {
+         refetchNotifications(); // Refetch notifications when user logs in
+      }
     };
     checkUser();
-  });
-  
+
+    // Listen for auth changes
+    const { data: authListener } = supabase.auth.onAuthStateChange(
+      (_event, session) => {
+        setUser(session?.user ?? null);
+        if (session?.user) {
+           refetchNotifications(); // Refetch on auth change
+        }
+      }
+    );
+
+    // Cleanup listener on component unmount
+    return () => {
+      authListener?.subscription.unsubscribe();
+    };
+  }, [refetchNotifications]); // Add refetchNotifications to dependency array
+
   const handleProfileMenuOpen = (event: React.MouseEvent<HTMLElement>) => {
     setAnchorEl(event.currentTarget);
   };
-  
+
   const handleMenuClose = () => {
     setAnchorEl(null);
   };
-  
+
   const handleDrawerToggle = () => {
     setMobileOpen(!mobileOpen);
   };
-  
+
   const handleLogout = async () => {
     await supabase.auth.signOut();
-    navigate('/login');
+    setUser(null); // Clear user state immediately
+    // No need to navigate here if onAuthStateChange handles it
     handleMenuClose();
   };
-  
+
+  const handleNotificationClick = () => {
+    // Navigate to a notifications page (create this route/page)
+    navigate('/notifications');
+     if(isMobile) handleDrawerToggle(); // Close drawer if mobile
+  };
+
   const menuId = 'primary-account-menu';
   const isMenuOpen = Boolean(anchorEl);
-  
+
   const renderMenu = (
     <Menu
       anchorEl={anchorEl}
@@ -87,7 +128,7 @@ export default function Navigation() {
       </MenuItem>
     </Menu>
   );
-  
+
   const drawer = (
     <Box onClick={handleDrawerToggle} sx={{ textAlign: 'center' }}>
       <Typography variant="h6" sx={{ my: 2 }}>
@@ -95,24 +136,36 @@ export default function Navigation() {
       </Typography>
       <Divider />
       <List>
-        <ListItem button onClick={() => navigate('/posts')}>
-          <ListItemIcon>
-            <HomeIcon />
-          </ListItemIcon>
-          <ListItemText primary="Posts" />
-        </ListItem>
-        <ListItem button onClick={() => navigate('/create-post')}>
-          <ListItemIcon>
-            <AddIcon />
-          </ListItemIcon>
-          <ListItemText primary="Create Post" />
-        </ListItem>
-        <ListItem button onClick={() => navigate('/profile')}>
-          <ListItemIcon>
-            <PersonIcon />
-          </ListItemIcon>
-          <ListItemText primary="Profile" />
-        </ListItem>
+        {user && ( // Only show these links if logged in
+          <>
+            <ListItem button onClick={() => navigate('/posts')}>
+              <ListItemIcon>
+                <HomeIcon />
+              </ListItemIcon>
+              <ListItemText primary="Posts" />
+            </ListItem>
+            <ListItem button onClick={handleNotificationClick}> {/* Add Notifications link */}
+              <ListItemIcon>
+                 <Badge badgeContent={unreadCount} color="error">
+                    <NotificationsIcon />
+                 </Badge>
+              </ListItemIcon>
+              <ListItemText primary="Notifications" />
+            </ListItem>
+            <ListItem button onClick={() => navigate('/create-post')}>
+              <ListItemIcon>
+                <AddIcon />
+              </ListItemIcon>
+              <ListItemText primary="Create Post" />
+            </ListItem>
+            <ListItem button onClick={() => navigate('/profile')}>
+              <ListItemIcon>
+                <PersonIcon />
+              </ListItemIcon>
+              <ListItemText primary="Profile" />
+            </ListItem>
+          </>
+        )}
         {!user ? (
           <ListItem button onClick={() => navigate('/login')}>
             <ListItemIcon>
@@ -131,17 +184,17 @@ export default function Navigation() {
       </List>
     </Box>
   );
-  
+
   // Don't show navigation on login and signup pages
   if (location.pathname === '/login' || location.pathname === '/signup') {
     return null;
   }
-  
+
   return (
     <Box sx={{ flexGrow: 1 }}>
       <AppBar position="static">
         <Toolbar>
-          {isMobile && (
+          {isMobile && user && ( // Only show drawer toggle if mobile and logged in
             <IconButton
               color="inherit"
               aria-label="open drawer"
@@ -152,7 +205,7 @@ export default function Navigation() {
               <MenuIcon />
             </IconButton>
           )}
-          
+
           <Typography
             variant="h6"
             noWrap
@@ -162,59 +215,57 @@ export default function Navigation() {
           >
             SIA Social
           </Typography>
-          
-          <Box sx={{ flexGrow: 1 }} />
-          
+
+          {/* Central Navigation Buttons for Desktop */}
           {!isMobile && user && (
-            <Container 
-              maxWidth="md" 
-              sx={{ 
-                display: 'flex', 
+            <Container
+              maxWidth="md"
+              sx={{
+                display: 'flex',
                 justifyContent: 'center',
                 position: 'absolute',
                 left: '50%',
                 transform: 'translateX(-50%)'
               }}
             >
-              <Button 
-                color="inherit" 
+              <Button
+                color="inherit"
                 startIcon={<HomeIcon />}
                 onClick={() => navigate('/posts')}
                 sx={{ mx: 1 }}
               >
                 Posts
               </Button>
-              <Button 
-                color="inherit" 
+              {/* Add Notification Icon Button */}
+              <IconButton
+                 size="large"
+                 aria-label="show new notifications"
+                 color="inherit"
+                 onClick={handleNotificationClick}
+                 sx={{ mx: 1 }}
+              >
+                 <Badge badgeContent={unreadCount} color="error">
+                    <NotificationsIcon />
+                 </Badge>
+              </IconButton>
+              <Button
+                color="inherit"
                 startIcon={<AddIcon />}
                 onClick={() => navigate('/create-post')}
                 sx={{ mx: 1 }}
               >
                 Create Post
               </Button>
-              <Button 
-                color="inherit" 
-                startIcon={<PersonIcon />}
-                onClick={() => navigate('/profile')}
-                sx={{ mx: 1 }}
-              >
-                Profile
-              </Button>
-              <Button 
-                color="inherit" 
-                startIcon={<LogoutIcon />}
-                onClick={handleLogout}
-                sx={{ mx: 1 }}
-              >
-                Logout
-              </Button>
+              {/* Profile and Logout moved to Avatar menu */}
             </Container>
           )}
-          
-          <Box sx={{ flexGrow: 1 }} />
-          
+
+          <Box sx={{ flexGrow: 1 }} /> {/* Pushes items to the right */}
+
+          {/* Right side items (Login/Avatar Menu) */}
           {user ? (
             <IconButton
+              size="large" // Consistent sizing
               edge="end"
               aria-label="account of current user"
               aria-controls={menuId}
@@ -227,13 +278,16 @@ export default function Navigation() {
               </Avatar>
             </IconButton>
           ) : (
-            <Button color="inherit" onClick={() => navigate('/login')}>
-              Login
-            </Button>
+             !isMobile && ( // Don't show login button on mobile if drawer is used
+                <Button color="inherit" onClick={() => navigate('/login')}>
+                   Login
+                </Button>
+             )
           )}
         </Toolbar>
       </AppBar>
-      
+
+      {/* Mobile Drawer */}
       <Drawer
         variant="temporary"
         open={mobileOpen}
@@ -248,7 +302,8 @@ export default function Navigation() {
       >
         {drawer}
       </Drawer>
-      
+
+      {/* Profile Menu */}
       {renderMenu}
     </Box>
   );

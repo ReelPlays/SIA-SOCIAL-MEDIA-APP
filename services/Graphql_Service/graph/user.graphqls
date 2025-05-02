@@ -1,3 +1,5 @@
+# graph/user.graphqls
+
 type Account {
   accountId: ID!
   email: String!
@@ -7,6 +9,7 @@ type Account {
   phone: String
   age: Int!
   gender: String
+  isFollowing: Boolean
   createdAt: String!
   updatedAt: String
 }
@@ -24,6 +27,12 @@ input RegisterInput {
 
 extend type Mutation {
   register(input: RegisterInput!): Account!
+
+  "Allows the logged-in user to follow another user."
+  followUser(userIdToFollow: ID!): Account! # Returns the account being followed
+
+  "Allows the logged-in user to unfollow another user."
+  unfollowUser(userIdToUnfollow: ID!): Account! # Returns the account being unfollowed
 }
 
 extend type Query {
