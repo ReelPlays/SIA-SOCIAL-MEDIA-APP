@@ -19,7 +19,7 @@ export const LoginForm: React.FC = () => {
     setLoading(true);
     try {
       await signInWithEmail(formData.email, formData.password);
-      navigate('/profile'); // Redirect after successful login
+      navigate('/posts'); // Redirect after successful login
     } catch (err: any) {
       console.error('Login failed:', err);
       // Improved error message handling (use Supabase specific errors if possible)
@@ -83,7 +83,7 @@ export const LoginForm: React.FC = () => {
             padding: (theme) => theme.spacing(4), // Use theme spacing for consistent padding (e.g., 32px)
             borderRadius: 2, // Slightly larger radius for a softer look
             boxShadow: '0px 4px 20px rgba(0, 0, 0, 0.1)', // Softer, more modern shadow
-            mt: 8, // Add some margin top if not perfectly centered vertically by Container
+            mt: -10, // Add some margin top if not perfectly centered vertically by Container
             mb: 4, // Margin bottom
           }}
         >

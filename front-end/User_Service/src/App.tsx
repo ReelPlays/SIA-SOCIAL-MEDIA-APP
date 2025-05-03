@@ -36,15 +36,18 @@ function App() {
         <CssBaseline />
         <Router>
           <Navigation />
-          <Box sx={{ pt: { xs: 8, sm: 9 } }}>
+          {/* Add some padding top if Navigation is fixed, otherwise adjust as needed */}
+          <Box sx={{ pt: { xs: 8, sm: 9 } }}> {/* Adjust padding top based on AppBar height */}
             <Routes>
               <Route path="/login" element={<LoginForm />} />
               <Route path="/signup" element={<SignupForm />} />
-              <Route path="/profile" element={<Profile />} />
+              <Route path="/profile" element={<Profile />} /> Assuming this is the logged-in user's profile
+              {/* Add route for viewing other profiles if needed, e.g., /profile/:userId */}
               <Route path="/posts" element={<Posts />} />
               <Route path="/create-post" element={<PostForm />} />
-              <Route path="/notifications" element={<NotificationsPage />} />
-              <Route path="/" element={<Navigate to="/login" replace />} /> {/* Changed from /posts to /login */}
+              <Route path="/notifications" element={<NotificationsPage />} /> {/* <-- Add route for notifications */}
+              <Route path="/" element={<Navigate to="/posts" replace />} /> {/* Default route */}
+              {/* Add other routes, e.g., for individual posts /posts/:postId */}
             </Routes>
           </Box>
         </Router>
