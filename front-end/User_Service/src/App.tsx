@@ -41,7 +41,7 @@ function App() {
             <Routes>
               <Route path="/login" element={<LoginForm />} />
               <Route path="/signup" element={<SignupForm />} />
-              <Route path="/profile" element={<Profile />} /> {/* Assuming this is the logged-in user's profile */}
+              <Route path="/profile" element={<Profile />} /> Assuming this is the logged-in user's profile
               {/* Add route for viewing other profiles if needed, e.g., /profile/:userId */}
               <Route path="/posts" element={<Posts />} />
               <Route path="/create-post" element={<PostForm />} />

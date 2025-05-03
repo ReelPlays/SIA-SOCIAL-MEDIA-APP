@@ -101,7 +101,7 @@ export const SignupForm: React.FC = () => {
             padding: 4,
             borderRadius: 2,
             boxShadow: '0px 4px 20px rgba(0, 0, 0, 0.1)',
-            mt: 4,
+            mt: 30,
             mb: 4,
             // Removed maxHeight and overflowY to eliminate scrolling
           }}
