@@ -1,23 +1,33 @@
+# Post type definition with embedded user info
 type Post {
   postId: ID!
   title: String!
   content: String!
   authorId: ID!
+  author: Account! # Resolved from the User service (Ensure Account has isFollowing)
   createdAt: String!
   updatedAt: String
 }
 
+# Input type for creating a post
 input CreatePostInput {
   title: String!
   content: String!
-  authorId: ID!
+  authorId: ID! # Ideally get from context in real app
 }
 
+# Mutations for creating posts
 extend type Mutation {
   createPost(input: CreatePostInput!): Post!
 }
 
+# Queries for retrieving posts
 extend type Query {
-  getPost(postId: ID!): Post!
-  listPosts: [Post!]!
+  getPost(postId: ID!): Post # Changed to nullable, post might not exist
+  listPosts: [Post!]! # Fetches all posts
+
+  """ ADD THIS QUERY: Fetches posts from users the current user follows. """
+  getFeed(limit: Int = 20, offset: Int = 0): [Post!]!
 }
+
+# Account type definition should be in user.graphqls

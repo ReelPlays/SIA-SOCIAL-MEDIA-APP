@@ -3,16 +3,17 @@
 package model
 
 type Account struct {
-	AccountID string  `json:"accountId"`
-	Email     string  `json:"email"`
-	FirstName string  `json:"firstName"`
-	LastName  string  `json:"lastName"`
-	Address   *string `json:"address,omitempty"`
-	Phone     *string `json:"phone,omitempty"`
-	Age       int32   `json:"age"`
-	Gender    *string `json:"gender,omitempty"`
-	CreatedAt string  `json:"createdAt"`
-	UpdatedAt *string `json:"updatedAt,omitempty"`
+	AccountID   string  `json:"accountId"`
+	Email       string  `json:"email"`
+	FirstName   string  `json:"firstName"`
+	LastName    string  `json:"lastName"`
+	Address     *string `json:"address,omitempty"`
+	Phone       *string `json:"phone,omitempty"`
+	Age         int32   `json:"age"`
+	Gender      *string `json:"gender,omitempty"`
+	IsFollowing *bool   `json:"isFollowing,omitempty"`
+	CreatedAt   string  `json:"createdAt"`
+	UpdatedAt   *string `json:"updatedAt,omitempty"`
 }
 
 type CreatePostInput struct {
@@ -43,13 +44,27 @@ type NewTodo struct {
 	UserID string `json:"userId"`
 }
 
+// Represents a notification for a user.
+type Notification struct {
+	NotificationID   string   `json:"notificationId"`
+	RecipientUserID  string   `json:"recipientUserId"`
+	TriggeringUser   *Account `json:"triggeringUser,omitempty"`
+	NotificationType string   `json:"notificationType"`
+	EntityID         *string  `json:"entityId,omitempty"`
+	IsRead           bool     `json:"isRead"`
+	CreatedAt        string   `json:"createdAt"`
+	// The post associated with this notification, if applicable (e.g., for 'new_post', 'like', 'new_comment').
+	Post *Post `json:"post,omitempty"`
+}
+
 type Post struct {
-	PostID    string  `json:"postId"`
-	Title     string  `json:"title"`
-	Content   string  `json:"content"`
-	AuthorID  string  `json:"authorId"`
-	CreatedAt string  `json:"createdAt"`
-	UpdatedAt *string `json:"updatedAt,omitempty"`
+	PostID    string   `json:"postId"`
+	Title     string   `json:"title"`
+	Content   string   `json:"content"`
+	AuthorID  string   `json:"authorId"`
+	Author    *Account `json:"author"`
+	CreatedAt string   `json:"createdAt"`
+	UpdatedAt *string  `json:"updatedAt,omitempty"`
 }
 
 type Profile struct {
