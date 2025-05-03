@@ -4,7 +4,7 @@ type Post {
   title: String!
   content: String!
   authorId: ID!
-  author: Account!        # Resolved from the User service
+  author: Account! # Resolved from the User service (Ensure Account has isFollowing)
   createdAt: String!
   updatedAt: String
 }
@@ -13,7 +13,7 @@ type Post {
 input CreatePostInput {
   title: String!
   content: String!
-  authorId: ID!
+  authorId: ID! # Ideally get from context in real app
 }
 
 # Mutations for creating posts
@@ -23,8 +23,11 @@ extend type Mutation {
 
 # Queries for retrieving posts
 extend type Query {
-  getPost(postId: ID!): Post!
-  listPosts: [Post!]!
+  getPost(postId: ID!): Post # Changed to nullable, post might not exist
+  listPosts: [Post!]! # Fetches all posts
+
+  """ ADD THIS QUERY: Fetches posts from users the current user follows. """
+  getFeed(limit: Int = 20, offset: Int = 0): [Post!]!
 }
 
-# Local copy of Account type (import or federate in production)
+# Account type definition should be in user.graphqls

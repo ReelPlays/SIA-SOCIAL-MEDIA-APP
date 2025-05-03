@@ -6,27 +6,34 @@ package graph
 
 import (
 	"context"
-	"fmt"
+	"fmt" // Keep fmt for the panic messages
 	"graphql/graph/model"
 )
 
 // CreateTodo is the resolver for the createTodo field.
-// Keep this panic unless you have implemented Todos elsewhere.
 func (r *mutationResolver) CreateTodo(ctx context.Context, input model.NewTodo) (*model.Todo, error) {
+	// If you haven't implemented Todos, keep the panic. Otherwise, implement it here or remove.
 	panic(fmt.Errorf("not implemented: CreateTodo - createTodo"))
 }
 
 // Todos is the resolver for the todos field.
-// Keep this panic unless you have implemented Todos elsewhere.
 func (r *queryResolver) Todos(ctx context.Context) ([]*model.Todo, error) {
+	// If you haven't implemented Todos, keep the panic. Otherwise, implement it here or remove.
 	panic(fmt.Errorf("not implemented: Todos - todos"))
 }
 
 // Mutation returns MutationResolver implementation.
+// This function connects the main Resolver struct to the mutationResolver struct.
 func (r *Resolver) Mutation() MutationResolver { return &mutationResolver{r} }
 
 // Query returns QueryResolver implementation.
+// This function connects the main Resolver struct to the queryResolver struct.
 func (r *Resolver) Query() QueryResolver { return &queryResolver{r} }
 
+// mutationResolver struct type definition.
+// Ensure this matches the type used in method receivers like CreatePost, FollowUser etc.
 type mutationResolver struct{ *Resolver }
+
+// queryResolver struct type definition.
+// Ensure this matches the type used in method receivers like GetFeed, GetPost, GetAccount etc.
 type queryResolver struct{ *Resolver }

@@ -1,6 +1,6 @@
-import React, { useEffect } from 'react';
-import { useQuery, gql } from '@apollo/client'; // Import useQuery and gql
-import { Link as RouterLink } from 'react-router-dom'; // For linking
+import React, { useEffect, useState, useCallback } from 'react';
+import { useQuery } from '@apollo/client'; // Import useQuery
+import { Link as RouterLink, useNavigate } from 'react-router-dom'; // Import RouterLink and useNavigate
 import {
   Container,
   Typography,
@@ -12,162 +12,185 @@ import {
   CircularProgress,
   Alert,
   Box,
-  Divider,
-  Link, // Import MUI Link for consistency within text
   Paper,
+  Button,
+  Link as MuiLink, // Use MUI Link for consistency within text
+  Divider, // Keep Divider if needed for styling
 } from '@mui/material';
 import { formatDistanceToNow } from 'date-fns'; // For nice date formatting
+import FollowButton from './FollowButton'; // Import the FollowButton component
+import { GET_FEED } from '../graphql/queries'; // *** CHANGE: Import the GET_FEED query ***
+import { supabase } from '../lib/supabase'; // To get current user
 
-// Import your query (ensure it fetches necessary fields)
-import { GET_MY_NOTIFICATIONS } from '../graphql/queries';
-
-// Define the expected structure of a notification based on your query
-interface TriggeringUser {
+// *** CHANGE: Define interfaces matching the GET_FEED response ***
+interface FeedPostAuthor {
   __typename?: 'Account';
   accountId: string;
   firstName: string;
   lastName: string;
+  isFollowing: boolean; // Field from GET_FEED query
 }
 
-interface Notification {
-  __typename?: 'Notification';
-  notificationId: string;
-  notificationType: string;
-  entityId?: string | null; // Optional ID of related entity (post, user)
-  isRead: boolean;
+interface FeedPost {
+  __typename?: 'Post';
+  postId: string;
+  title?: string | null;
+  content: string;
   createdAt: string; // ISO string date
-  triggeringUser?: TriggeringUser | null; // User who caused the notification
+  author: FeedPostAuthor;
 }
 
+// Interface for current user data from Supabase (keep as is)
+interface Account {
+    id: string;
+    first_name: string;
+    last_name: string;
+    email: string;
+}
+
+// Component to display the feed
 const NotificationsPage: React.FC = () => {
-  // Fetch notifications using the imported query
-  const { data, loading, error, refetch } = useQuery<{ getMyNotifications: Notification[] }>(
-    GET_MY_NOTIFICATIONS,
-    {
-      // Fetch all notifications, not just unread for this page
-      variables: { limit: 50, offset: 0 }, // Adjust limit/offset as needed
-      fetchPolicy: 'cache-and-network', // Good for lists that might update
-    }
-  );
+    const [currentUser, setCurrentUser] = useState<Account | null>(null);
+    const [currentUserLoading, setCurrentUserLoading] = useState(true);
+    const navigate = useNavigate();
 
-  // Optional: Refetch when the component mounts to ensure fresh data
-  useEffect(() => {
-    refetch();
-  }, [refetch]);
+    // Fetch current user details via Supabase (keep this logic)
+    useEffect(() => {
+         fetchCurrentUser();
+     }, []);
 
-  // --- Helper function to render notification text ---
-  const renderNotificationText = (notification: Notification) => {
-    const { notificationType, triggeringUser, entityId } = notification;
-    const userName = triggeringUser ? `${triggeringUser.firstName} ${triggeringUser.lastName}` : 'Someone';
-    const userLink = triggeringUser ? (
-       <Link component={RouterLink} to={`/profile/${triggeringUser.accountId}`} fontWeight="bold" underline="hover">
-           {userName}
-       </Link>
-     ) : (
-       <Typography component="span" fontWeight="bold">{userName}</Typography>
-     );
+    const fetchCurrentUser = useCallback(async () => {
+       setCurrentUserLoading(true);
+       try {
+           const { data: { user } } = await supabase.auth.getUser();
+           if (user) {
+               const { data, error } = await supabase
+                   .from('accounts')
+                   .select('id, first_name, last_name, email')
+                   .eq('id', user.id)
+                   .single();
+               if (error) throw error;
+               setCurrentUser(data);
+           } else {
+               setCurrentUser(null);
+           }
+       } catch (error) {
+           console.error('Error fetching current user:', error);
+           setCurrentUser(null);
+       } finally {
+           setCurrentUserLoading(false);
+       }
+    }, []);
 
-    switch (notificationType) {
-      case 'new_follower':
-        // Example: Link entityId (follower's ID) to their profile
-        return (
-           <Typography component="span" variant="body2">
-                {userLink} started following you.
-           </Typography>
-        );
-      case 'new_post': // Assuming you implement this type
-        // Example: Link entityId (post ID) to the post page (adjust route)
-        return (
-            <Typography component="span" variant="body2">
-               {userLink} created a new{' '}
-               <Link component={RouterLink} to={`/posts/${entityId}`} underline="hover">post</Link>.
-            </Typography>
-        );
-      case 'like': // Assuming you implement this type
-         // Example: Link entityId (post ID) to the post page
-         return (
-            <Typography component="span" variant="body2">
-               {userLink} liked your{' '}
-               <Link component={RouterLink} to={`/posts/${entityId}`} underline="hover">post</Link>.
-            </Typography>
-         );
-        // Add cases for other notification types (e.g., 'new_comment')
-      default:
-        return (
-            <Typography component="span" variant="body2">
-                {userName} triggered a notification ({notificationType}).
-            </Typography>
-         );
-    }
-  };
 
-  // --- Render logic ---
-  if (loading && !data) {
-    return (
-      <Box display="flex" justifyContent="center" alignItems="center" height="50vh">
-        <CircularProgress />
-      </Box>
+    // *** CHANGE: Fetch the feed using GET_FEED query ***
+    const { data, loading, error, refetch } = useQuery<{ getFeed: FeedPost[] }>(
+        GET_FEED, // Use the feed query
+        {
+            variables: { limit: 20, offset: 0 }, // Example pagination
+            fetchPolicy: 'cache-and-network',
+            skip: !currentUser, // Don't run query until current user is loaded
+            notifyOnNetworkStatusChange: true,
+        }
     );
-  }
 
-  if (error) {
+   // Refetch feed when current user changes
+   useEffect(() => {
+     if (currentUser && !currentUserLoading) {
+       refetch();
+     }
+   }, [currentUser, currentUserLoading, refetch]);
+
+    // Callback to update UI after follow/unfollow action
+    const handleFollowUpdate = useCallback(() => {
+        refetch(); // Simple refetch for now
+    }, [refetch]);
+
+    // --- Render Logic ---
+    const isLoading = (loading && !data) || currentUserLoading;
+
+    if (isLoading) {
+        return ( <Box display="flex" justifyContent="center" alignItems="center" height="50vh"><CircularProgress /></Box> );
+    }
+
+    if (error) {
+        return ( <Container maxWidth="md" sx={{ mt: 4 }}><Alert severity="error">Error loading feed: {error.message}</Alert><Button onClick={() => refetch()} sx={{ mt: 1 }}>Retry</Button></Container> );
+    }
+
+    if (!currentUser) {
+       return ( <Container maxWidth="md" sx={{ mt: 4, textAlign: 'center' }}><Typography variant="h6" gutterBottom>Welcome!</Typography><Typography>Please log in to see your personalized feed.</Typography><Button variant="contained" onClick={() => navigate('/login')} sx={{mt: 2}}>Login</Button></Container> );
+    }
+
+    // *** CHANGE: Access data using data.getFeed ***
+    const posts = data?.getFeed || [];
+
     return (
-      <Container maxWidth="md" sx={{ mt: 4 }}>
-        <Alert severity="error">Error loading notifications: {error.message}</Alert>
-        <Button onClick={() => refetch()} sx={{ mt: 1 }}>Retry</Button>
-      </Container>
+        <Container maxWidth="md" sx={{ mt: 2, mb: 4 }}>
+            {/* *** CHANGE: Update Title *** */}
+            <Typography variant="h4" gutterBottom sx={{ textAlign: 'center', mb: 3 }}>
+                Feed
+            </Typography>
+            {/* *** CHANGE: Render posts instead of notifications *** */}
+            <List sx={{ width: '100%', bgcolor: 'transparent', padding: 0 }}>
+                {posts.length === 0 ? (
+                    <Paper elevation={0} sx={{ p: 3, textAlign: 'center', borderRadius: 2 }}>
+                        <Typography variant="h6">Nothing new yet!</Typography>
+                        <Typography color="text.secondary">Posts from people you follow will appear here.</Typography>
+                    </Paper>
+                ) : (
+                    posts.map((post) => (
+                        <Paper key={post.postId} elevation={1} sx={{ mb: 2, borderRadius: 2, overflow: 'hidden' }}>
+                            <ListItem alignItems="flex-start" sx={{ p: 2 }}>
+                                <ListItemAvatar sx={{ mt: 0.5 }}>
+                                    <RouterLink to={`/profile/${post.author.accountId}`}>
+                                        <Avatar sx={{ bgcolor: 'primary.light', cursor: 'pointer' }}>
+                                            {post.author?.firstName?.[0]?.toUpperCase() ?? '?'}
+                                            {post.author?.lastName?.[0]?.toUpperCase() ?? ''}
+                                        </Avatar>
+                                    </RouterLink>
+                                </ListItemAvatar>
+                                <ListItemText
+                                    disableTypography
+                                    primary={
+                                        <Box sx={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', mb: 0.5 }}>
+                                            <Typography fontWeight="bold" component="span" sx={{ mr: 1 }}>
+                                                <MuiLink component={RouterLink} to={`/profile/${post.author.accountId}`} color="text.primary" underline="hover">
+                                                    {post.author.firstName} {post.author.lastName}
+                                                </MuiLink>
+                                            </Typography>
+                                            {/* Follow Button */}
+                                            <FollowButton
+                                                userIdToFollow={post.author.accountId}
+                                                initialIsFollowing={post.author.isFollowing}
+                                                currentUserId={currentUser.id}
+                                                onUpdate={handleFollowUpdate}
+                                            />
+                                        </Box>
+                                    }
+                                    secondary={
+                                        <>
+                                            {post.title && (
+                                                <Typography variant="h6" component="div" sx={{ my: 1, fontWeight: 'medium' }}>
+                                                    {post.title}
+                                                </Typography>
+                                            )}
+                                            <Typography component="div" variant="body2" sx={{ py: 0.5, whiteSpace: 'pre-wrap', color: 'text.secondary' }}>
+                                                {post.content}
+                                            </Typography>
+                                            <Typography variant="caption" color="text.disabled" sx={{ mt: 1, display:'block' }}>
+                                                {formatDistanceToNow(new Date(post.createdAt), { addSuffix: true })}
+                                            </Typography>
+                                        </>
+                                    }
+                                />
+                            </ListItem>
+                        </Paper>
+                    ))
+                )}
+            </List>
+            {/* Optional: Add Load More Button/Logic here */}
+        </Container>
     );
-  }
-
-  const notifications = data?.getMyNotifications || [];
-
-  return (
-    <Container maxWidth="md" sx={{ mt: 4 }}>
-      <Typography variant="h4" gutterBottom>
-        Notifications
-      </Typography>
-      <Paper elevation={1} sx={{borderRadius: 2}}>
-         <List sx={{ width: '100%', bgcolor: 'background.paper', borderRadius: 2, padding: 0 }}>
-           {notifications.length === 0 ? (
-             <ListItem>
-               <ListItemText primary="You have no notifications yet." />
-             </ListItem>
-           ) : (
-             notifications.map((notification, index) => (
-               <React.Fragment key={notification.notificationId}>
-                 <ListItem
-                   alignItems="flex-start"
-                   sx={{
-                     // Style unread notifications differently
-                     bgcolor: notification.isRead ? 'inherit' : 'action.hover',
-                     // Add potential click handler later for marking as read/navigating
-                     // cursor: 'pointer',
-                     // '&:hover': { bgcolor: notification.isRead ? 'action.selected' : 'action.disabledBackground' }
-                   }}
-                 >
-                   <ListItemAvatar>
-                     <Avatar sx={{ bgcolor: 'secondary.main' }}>
-                       {notification.triggeringUser?.firstName?.[0]?.toUpperCase() ?? '?'}
-                     </Avatar>
-                   </ListItemAvatar>
-                   <ListItemText
-                     primary={renderNotificationText(notification)}
-                     secondary={
-                       <Typography variant="caption" color="text.secondary">
-                         {formatDistanceToNow(new Date(notification.createdAt), { addSuffix: true })}
-                       </Typography>
-                     }
-                     primaryTypographyProps={{component: 'div'}} // Allow complex primary content
-                   />
-                 </ListItem>
-                 {index < notifications.length - 1 && <Divider variant="inset" component="li" />}
-               </React.Fragment>
-             ))
-           )}
-         </List>
-      </Paper>
-    </Container>
-  );
 };
 
-export default NotificationsPage;
+export default NotificationsPage; // Keep export name unless you rename the file

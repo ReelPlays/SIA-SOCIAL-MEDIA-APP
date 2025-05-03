@@ -19,8 +19,7 @@ export const GET_MY_NOTIFICATIONS = gql`
   }
 `;
 
-// Define or update your query for listing posts
-// Make sure it fetches author details including the new isFollowing field
+// Query for listing posts (ensure it includes author and isFollowing)
 export const LIST_POSTS = gql`
   query ListPosts { # Add arguments like limit/offset if needed
     listPosts {
@@ -28,16 +27,35 @@ export const LIST_POSTS = gql`
       title
       content
       createdAt
-      author { # Ensure author is fetched
+      author {
         accountId
         firstName
         lastName
         isFollowing # Fetch the new field
       }
-      # Add other post fields you need
     }
   }
 `;
+
+// *** ADD THIS QUERY DEFINITION ***
+export const GET_FEED = gql`
+  query GetFeed($limit: Int, $offset: Int) {
+    # Use the exact query name from your backend schema
+    getFeed(limit: $limit, offset: $offset) {
+      postId
+      title
+      content
+      createdAt
+      author {
+        accountId
+        firstName
+        lastName
+        isFollowing # Needed for FollowButton
+      }
+    }
+  }
+`;
+
 
 /* Optional: If you implement marking as read
 export const MARK_NOTIFICATION_READ = gql`

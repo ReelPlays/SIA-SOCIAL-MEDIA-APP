@@ -53,6 +53,8 @@ type Notification struct {
 	EntityID         *string  `json:"entityId,omitempty"`
 	IsRead           bool     `json:"isRead"`
 	CreatedAt        string   `json:"createdAt"`
+	// The post associated with this notification, if applicable (e.g., for 'new_post', 'like', 'new_comment').
+	Post *Post `json:"post,omitempty"`
 }
 
 type Post struct {
