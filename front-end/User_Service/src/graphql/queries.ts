@@ -1,7 +1,7 @@
 // src/graphql/queries.ts
 import { gql } from '@apollo/client';
 
-// Query to fetch notifications for the logged-in user
+// Keep existing queries
 export const GET_MY_NOTIFICATIONS = gql`
   query GetMyNotifications($limit: Int, $offset: Int, $filter: String) {
     getMyNotifications(limit: $limit, offset: $offset, filter: $filter) {
@@ -19,48 +19,79 @@ export const GET_MY_NOTIFICATIONS = gql`
   }
 `;
 
-// Query for listing posts (ensure it includes author and isFollowing)
 export const LIST_POSTS = gql`
-  query ListPosts { # Add arguments like limit/offset if needed
+  query ListPosts {
     listPosts {
       postId
       title
       content
       createdAt
+      commentsCount
+      likesCount  
+      isLiked     
       author {
         accountId
         firstName
         lastName
-        isFollowing # Fetch the new field
+        isFollowing
       }
     }
   }
 `;
 
-// *** ADD THIS QUERY DEFINITION ***
 export const GET_FEED = gql`
   query GetFeed($limit: Int, $offset: Int) {
-    # Use the exact query name from your backend schema
     getFeed(limit: $limit, offset: $offset) {
       postId
       title
       content
-      createdAt
+      createdAt  
+      commentsCount
+      likesCount  
+      isLiked    
       author {
         accountId
         firstName
         lastName
-        isFollowing # Needed for FollowButton
+        isFollowing
       }
     }
   }
 `;
 
-
-/* Optional: If you implement marking as read
-export const MARK_NOTIFICATION_READ = gql`
-  mutation MarkNotificationRead($notificationId: ID!) {
-    markNotificationRead(notificationId: $notificationId) # Needs backend implementation
+// Add new query for getting a single post with details
+export const GET_POST = gql`
+  query GetPost($postId: ID!) {
+    getPost(postId: $postId) {
+      postId
+      title
+      content
+      createdAt
+      updatedAt
+      commentsCount
+      author {
+        accountId
+        firstName
+        lastName
+        isFollowing
+      }
+    }
   }
 `;
-*/
+
+// Add new query for fetching comments on a post
+export const GET_POST_COMMENTS = gql`
+  query GetPostComments($postId: ID!, $limit: Int, $offset: Int) {
+    getPostComments(postId: $postId, limit: $limit, offset: $offset) {
+      commentId
+      content
+      createdAt
+      updatedAt
+      author {
+        accountId
+        firstName
+        lastName
+      }
+    }
+  }
+`;

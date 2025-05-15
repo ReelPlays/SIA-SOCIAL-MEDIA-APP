@@ -1,0 +1,11 @@
+# graph/like.graphqls
+
+extend type Post {
+  likesCount: Int!
+  isLiked: Boolean!
+}
+
+extend type Mutation {
+  likePost(postId: ID!): Boolean!
+  unlikePost(postId: ID!): Boolean!
+}

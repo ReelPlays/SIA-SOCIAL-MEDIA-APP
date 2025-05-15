@@ -123,7 +123,7 @@ func main() {
 
 	// --- CORS Configuration --- (same as before)
 	c := cors.New(cors.Options{
-		AllowedOrigins: []string{frontendOrigin},
+		AllowedOrigins: []string{frontendOrigin, "http://localhost:5173", "http://localhost:8080"},
 		AllowedMethods: []string{"GET", "POST", "OPTIONS"},
 		AllowedHeaders: []string{"Authorization", "Content-Type", "X-Apollo-Operation-Name"},
 		Debug:          true,

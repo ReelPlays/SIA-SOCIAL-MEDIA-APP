@@ -5,6 +5,8 @@ type Post {
   content: String!
   authorId: ID!
   author: Account! # Resolved from the User service (Ensure Account has isFollowing)
+  comments: [Comment!]! # Add this field
+  commentsCount: Int!   # Add this field
   createdAt: String!
   updatedAt: String
 }
@@ -16,9 +18,18 @@ input CreatePostInput {
   authorId: ID! # Ideally get from context in real app
 }
 
+# Input type for updating a post
+input UpdatePostInput {
+  postId: ID!
+  title: String!
+  content: String!
+}
+
 # Mutations for creating posts
 extend type Mutation {
   createPost(input: CreatePostInput!): Post!
+  updatePost(input: UpdatePostInput!): Post!  # Add this mutation
+  deletePost(postId: ID!): Boolean!
 }
 
 # Queries for retrieving posts
