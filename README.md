@@ -185,29 +185,5 @@ npm run dev
 
 - The application expects PostgreSQL to be running locally
 - Supabase integration requires manual setup
-- No email verification system is implemented yet
 - Images are stored using Supabase storage
 
-## 🤝 Contributing
-
-Contributions are welcome! Please feel free to submit a Pull Request.
-
-1. Fork the project
-2. Create your feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add some amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
-
-## 📄 License
-
-This project is licensed under the MIT License - see the LICENSE file for details.
-
-## 🙏 Acknowledgments
-
-- Material UI for the component library
-- Supabase for authentication and storage
-- gqlgen for GraphQL implementation in Go
-
----
-
-Made with ❤️ by [Your Name]
