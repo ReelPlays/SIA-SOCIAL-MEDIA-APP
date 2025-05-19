@@ -1,3 +1,4 @@
+// src/components/CommentForm.tsx
 import React, { useState } from 'react';
 import { useMutation } from '@apollo/client';
 import {
@@ -5,8 +6,12 @@ import {
   Button,
   Box,
   CircularProgress,
-  Alert
+  Alert,
+  useTheme,
+  InputAdornment,
+  IconButton
 } from '@mui/material';
+import { Send as SendIcon, Close as CloseIcon } from '@mui/icons-material';
 import { CREATE_COMMENT, UPDATE_COMMENT } from '../graphql/mutations';
 
 interface CommentFormProps {
@@ -26,6 +31,7 @@ const CommentForm: React.FC<CommentFormProps> = ({
   onCommentUpdated,
   onCancel
 }) => {
+  const theme = useTheme();
   const [content, setContent] = useState(initialContent);
   const [error, setError] = useState<string | null>(null);
 
@@ -92,9 +98,15 @@ const CommentForm: React.FC<CommentFormProps> = ({
   const isEditing = Boolean(commentId);
 
   return (
-    <Box component="form" onSubmit={handleSubmit} sx={{ mt: 2, mb: 2 }}>
+    <Box component="form" onSubmit={handleSubmit} sx={{ mt: 1, mb: 2 }}>
       {error && (
-        <Alert severity="error" sx={{ mb: 2 }}>
+        <Alert 
+          severity="error" 
+          sx={{ 
+            mb: 2,
+            borderRadius: 2
+          }}
+        >
           {error}
         </Alert>
       )}
@@ -102,42 +114,94 @@ const CommentForm: React.FC<CommentFormProps> = ({
       <TextField
         fullWidth
         multiline
-        rows={2}
+        minRows={1}
+        maxRows={4}
         variant="outlined"
-        placeholder={isEditing ? "Edit your comment..." : "Write a comment..."}
+        placeholder={isEditing ? "Edit your comment..." : "Add a comment..."}
         value={content}
         onChange={(e) => setContent(e.target.value)}
         disabled={loading}
-        sx={{ mb: 1 }}
+        sx={{ 
+          mb: 1,
+          '& .MuiOutlinedInput-root': {
+            borderRadius: 3,
+            bgcolor: 'rgba(0,0,0,0.02)',
+            transition: 'all 0.2s ease',
+            '&:hover': {
+              bgcolor: 'rgba(0,0,0,0.03)',
+            },
+            '&.Mui-focused': {
+              bgcolor: 'white',
+            }
+          }
+        }}
+        InputProps={{
+          endAdornment: (
+            <InputAdornment position="end">
+              {content.trim() && (
+                <IconButton 
+                  type="submit"
+                  disabled={loading || !content.trim()}
+                  size="small"
+                  color="primary"
+                  sx={{
+                    mr: 0.5,
+                    transition: 'all 0.2s ease',
+                    '&:hover': {
+                      transform: 'scale(1.1)'
+                    }
+                  }}
+                >
+                  {loading ? (
+                    <CircularProgress size={20} color="inherit" />
+                  ) : (
+                    <SendIcon fontSize="small" />
+                  )}
+                </IconButton>
+              )}
+            </InputAdornment>
+          )
+        }}
       />
       
-      <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 1 }}>
-        {isEditing && (
+      {isEditing && (
+        <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 1 }}>
           <Button 
             variant="outlined" 
             color="inherit" 
             onClick={onCancel}
             disabled={loading}
+            size="small"
+            startIcon={<CloseIcon fontSize="small" />}
+            sx={{ 
+              borderRadius: 3,
+              textTransform: 'none',
+              fontWeight: 500
+            }}
           >
             Cancel
           </Button>
-        )}
-        
-        <Button 
-          type="submit" 
-          variant="contained" 
-          color="primary"
-          disabled={loading || !content.trim()}
-        >
-          {loading ? (
-            <CircularProgress size={24} color="inherit" />
-          ) : isEditing ? (
-            'Update'
-          ) : (
-            'Comment'
-          )}
-        </Button>
-      </Box>
+          
+          <Button 
+            type="submit" 
+            variant="contained" 
+            color="primary"
+            disabled={loading || !content.trim()}
+            size="small"
+            sx={{ 
+              borderRadius: 3,
+              textTransform: 'none',
+              fontWeight: 500
+            }}
+          >
+            {loading ? (
+              <CircularProgress size={24} color="inherit" />
+            ) : (
+              'Update'
+            )}
+          </Button>
+        </Box>
+      )}
     </Box>
   );
 };

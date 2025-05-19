@@ -1,10 +1,11 @@
+/* src/index.css */
 :root {
-  --primary-color: #1877f2; /* Facebook blue */
-  --secondary-color: #42b72a; /* Green */
-  --background-light: #f0f2f5;
-  --background-dark: #18191a;
-  --text-primary: #050505;
-  --text-secondary: #65676b;
+  --primary-color: #815DAB;
+  --secondary-color: #4A4A4A;
+  --background-light: #FBF7FF;
+  --background-dark: #333333;
+  --text-primary: #333333;
+  --text-secondary: #666666;
   --card-background: #ffffff;
 
   font-family: 'Segoe UI', Roboto, system-ui, sans-serif;
@@ -24,16 +25,19 @@ body {
 a {
   color: var(--primary-color);
   text-decoration: none;
+  transition: all 0.2s ease;
 }
 
 a:hover {
   text-decoration: underline;
+  opacity: 0.9;
 }
 
 /* Navbar specific styles */
 .navbar {
   background-color: var(--primary-color) !important;
   border-radius: 0px !important;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1) !important;
 }
 
 .navbar-container {
@@ -47,25 +51,39 @@ a:hover {
 .navbar-button {
   color: white !important;
   margin: 0 8px !important;
+  padding: 6px 16px !important;
+  border-radius: 20px !important;
+  transition: all 0.2s ease !important;
 }
 
 .navbar-button:hover {
-  background-color: rgba(255, 255, 255, 0.1) !important;
+  background-color: rgba(255, 255, 255, 0.15) !important;
+  transform: translateY(-1px);
 }
 
 /* Cards and posts */
 .MuiPaper-root {
   background-color: var(--card-background);
-  border-radius: px !important;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1) !important;
+  border-radius: 12px !important;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05) !important;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.MuiPaper-root:hover {
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08) !important;
 }
 
 /* Buttons */
 button {
-  border-radius: 6px !important;
-  font-weight: 600 !important;
+  border-radius: 8px !important;
+  font-weight: 500 !important;
   text-transform: none !important;
   padding: 8px 16px !important;
+  transition: all 0.2s ease !important;
+}
+
+button:hover {
+  transform: translateY(-1px);
 }
 
 /* Avatar styles */
@@ -73,24 +91,27 @@ button {
   width: 40px !important;
   height: 40px !important;
   font-weight: 600 !important;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.1) !important;
 }
 
 .avatar-large {
   width: 150px !important;
   height: 150px !important;
   font-size: 60px !important;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.15) !important;
 }
 
 .avatar-nav {
   width: 32px !important;
   height: 32px !important;
-  background-color: var(--secondary-color) !important;
+  background-color: var(--primary-color) !important;
   color: white !important;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.1) !important;
 }
 
 /* Typography */
 .MuiTypography-h6 {
-  font-weight: 700 !important;
+  font-weight: 600 !important;
   font-size: 1.25rem !important;
 }
 
@@ -98,18 +119,47 @@ button {
 .MuiListItem-root {
   padding-left: 8px !important;
   padding-right: 8px !important;
+  border-radius: 8px !important;
+  transition: background-color 0.2s ease !important;
+}
+
+.MuiListItem-root:hover {
+  background-color: rgba(0, 0, 0, 0.03) !important;
 }
 
 /* Dark mode support */
 @media (prefers-color-scheme: dark) {
   :root {
-    --background-light: #18191a;
-    --text-primary: #e4e6eb;
-    --text-secondary: #b0b3b8;
-    --card-background: #242526;
+    --background-light: #222222;
+    --text-primary: #F5F5F5;
+    --text-secondary: #BBBBBB;
+    --card-background: #333333;
+  }
+
+  .MuiPaper-root {
+    background-color: var(--card-background);
   }
 
   .navbar {
     background-color: var(--background-dark) !important;
   }
+}
+
+/* Animation classes */
+.fade-in {
+  animation: fadeIn 0.3s ease-in;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.slide-up {
+  animation: slideUp 0.3s ease-out;
+}
+
+@keyframes slideUp {
+  from { transform: translateY(20px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
 }

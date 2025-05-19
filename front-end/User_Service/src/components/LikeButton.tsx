@@ -1,10 +1,12 @@
+// src/components/LikeButton.tsx
 import React, { useState, useEffect } from 'react';
 import { useMutation } from '@apollo/client';
 import { 
   IconButton, 
   Typography, 
   Box, 
-  CircularProgress 
+  CircularProgress,
+  useTheme
 } from '@mui/material';
 import {
   Favorite as FavoriteIcon,
@@ -40,8 +42,10 @@ const LikeButton: React.FC<LikeButtonProps> = ({
   currentUserId,
   onLikeUpdate
 }) => {
+  const theme = useTheme();
   const [isLiked, setIsLiked] = useState(initialIsLiked);
   const [likeCount, setLikeCount] = useState(initialLikeCount);
+  const [isAnimating, setIsAnimating] = useState(false);
   
   // Keep internal state synced with props
   useEffect(() => {
@@ -54,6 +58,8 @@ const LikeButton: React.FC<LikeButtonProps> = ({
     onCompleted: () => {
       setIsLiked(true);
       setLikeCount(prevCount => prevCount + 1);
+      setIsAnimating(true);
+      setTimeout(() => setIsAnimating(false), 600);
       if (onLikeUpdate) onLikeUpdate(postId, true, likeCount + 1);
     },
     onError: (err) => {
@@ -73,7 +79,8 @@ const LikeButton: React.FC<LikeButtonProps> = ({
     }
   });
   
-  const handleLikeToggle = () => {
+  const handleLikeToggle = (e: React.MouseEvent) => {
+    e.stopPropagation();
     if (!currentUserId) return; // Don't allow unauthenticated likes
     
     if (isLiked) {
@@ -91,7 +98,15 @@ const LikeButton: React.FC<LikeButtonProps> = ({
         size="small" 
         onClick={handleLikeToggle}
         disabled={loading || !currentUserId}
-        color={isLiked ? 'error' : 'default'}
+        sx={{
+          color: isLiked ? theme.palette.error.main : 'inherit',
+          transform: isAnimating ? 'scale(1.2)' : 'scale(1)',
+          transition: 'transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275)',
+          '&:hover': {
+            color: isLiked ? theme.palette.error.main : theme.palette.error.light,
+            bgcolor: isLiked ? 'rgba(244, 67, 54, 0.1)' : 'rgba(244, 67, 54, 0.05)'
+          }
+        }}
       >
         {loading ? (
           <CircularProgress size={16} color="inherit" />
@@ -101,7 +116,15 @@ const LikeButton: React.FC<LikeButtonProps> = ({
           <FavoriteBorderIcon fontSize="small" />
         )}
       </IconButton>
-      <Typography variant="body2" color="text.secondary">
+      <Typography 
+        variant="body2" 
+        color={isLiked ? "error" : "text.secondary"}
+        sx={{ 
+          ml: 0.5,
+          fontWeight: isLiked ? 500 : 400,
+          transition: 'all 0.2s ease',
+        }}
+      >
         {likeCount}
       </Typography>
     </Box>

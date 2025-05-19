@@ -1,3 +1,4 @@
+// src/components/EditPostForm.tsx
 import React, { useState } from 'react';
 import { useMutation } from '@apollo/client';
 import {
@@ -9,9 +10,13 @@ import {
   Button,
   CircularProgress,
   Alert,
-  Box
+  IconButton,
+  Box,
+  Typography
 } from '@mui/material';
+import { Close as CloseIcon } from '@mui/icons-material';
 import { UPDATE_POST } from '../graphql/mutations';
+import { supabase } from '../lib/supabase';
 
 interface EditPostFormProps {
   open: boolean;
@@ -20,6 +25,13 @@ interface EditPostFormProps {
     postId: string;
     title: string;
     content: string;
+    createdAt?: string;
+    commentsCount?: number;
+    author?: {
+      accountId: string;
+      firstName: string;
+      lastName: string;
+    };
   };
   onPostUpdated?: () => void;
 }
@@ -63,14 +75,29 @@ const EditPostForm: React.FC<EditPostFormProps> = ({
     // Clear any previous errors
     setError(null);
     
-    updatePost({
-      variables: {
-        input: {
-          postId: post.postId,
-          title: title.trim(),
-          content: content.trim()
-        }
+    // Get the access token from Supabase
+    supabase.auth.getSession().then(({ data }) => {
+      const token = data.session?.access_token;
+      
+      if (!token) {
+        setError('Authentication required. Please log in again.');
+        return;
       }
+      
+      updatePost({
+        variables: {
+          input: {
+            postId: post.postId,
+            title: title.trim(),
+            content: content.trim()
+          }
+        },
+        context: {
+          headers: {
+            "Authorization": `Bearer ${token}`,
+          }
+        }
+      });
     });
   };
 
@@ -80,11 +107,23 @@ const EditPostForm: React.FC<EditPostFormProps> = ({
       onClose={() => !loading && onClose()}
       fullWidth
       maxWidth="sm"
+      PaperProps={{
+        sx: {
+          borderRadius: 2
+        }
+      }}
     >
       <form onSubmit={handleSubmit}>
-        <DialogTitle>Edit Post</DialogTitle>
+        <DialogTitle>
+          <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <Typography variant="h6">Edit post</Typography>
+            <IconButton onClick={onClose} disabled={loading}>
+              <CloseIcon />
+            </IconButton>
+          </Box>
+        </DialogTitle>
         
-        <DialogContent>
+        <DialogContent dividers>
           {error && (
             <Alert severity="error" sx={{ mb: 2 }}>
               {error}
@@ -99,6 +138,10 @@ const EditPostForm: React.FC<EditPostFormProps> = ({
             margin="normal"
             required
             disabled={loading}
+            variant="outlined"
+            InputProps={{
+              sx: { borderRadius: 2 }
+            }}
           />
           
           <TextField
@@ -111,13 +154,19 @@ const EditPostForm: React.FC<EditPostFormProps> = ({
             multiline
             rows={6}
             disabled={loading}
+            variant="outlined"
+            InputProps={{
+              sx: { borderRadius: 2 }
+            }}
           />
         </DialogContent>
         
-        <DialogActions>
+        <DialogActions sx={{ px: 3, py: 2 }}>
           <Button 
+            variant="outlined"
             onClick={onClose} 
             disabled={loading}
+            sx={{ borderRadius: 5 }}
           >
             Cancel
           </Button>
@@ -126,6 +175,7 @@ const EditPostForm: React.FC<EditPostFormProps> = ({
             variant="contained" 
             color="primary" 
             disabled={loading || !title.trim() || !content.trim()}
+            sx={{ borderRadius: 5 }}
           >
             {loading ? <CircularProgress size={24} /> : 'Save Changes'}
           </Button>

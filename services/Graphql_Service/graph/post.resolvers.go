@@ -115,7 +115,71 @@ func (r *mutationResolver) CreatePost(ctx context.Context, input model.CreatePos
 
 // UpdatePost is the resolver for the updatePost field.
 func (r *mutationResolver) UpdatePost(ctx context.Context, input model.UpdatePostInput) (*model.Post, error) {
-	panic(fmt.Errorf("not implemented: UpdatePost - updatePost"))
+	// 1. Get the current authenticated user ID
+	currentUserID, err := getCurrentUserID(ctx)
+	if err != nil {
+		log.Printf("UpdatePost Error: Authentication failed: %v", err)
+		return nil, fmt.Errorf("authentication required")
+	}
+	log.Printf("UpdatePost: Authenticated as user: %s", currentUserID)
+
+	// 2. Connect to the database
+	db, err := getDB()
+	if err != nil {
+		log.Printf("UpdatePost DB Error: Failed to connect to database: %v", err)
+		return nil, fmt.Errorf("internal server error")
+	}
+	defer db.Close()
+
+	// 3. First verify that the post exists and belongs to the current user
+	var authorID string
+	var createdAt time.Time
+	verifyCtx, cancelVerify := context.WithTimeout(ctx, 5*time.Second)
+	defer cancelVerify()
+
+	verifyQuery := `SELECT author_id, created_at FROM posts WHERE post_id = $1`
+	err = db.QueryRowContext(verifyCtx, verifyQuery, input.PostID).Scan(&authorID, &createdAt)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			log.Printf("UpdatePost: Post with ID %s not found", input.PostID)
+			return nil, fmt.Errorf("post not found")
+		}
+		log.Printf("UpdatePost DB Error checking post ownership: %v", err)
+		return nil, fmt.Errorf("failed to verify post ownership: %v", err)
+	}
+	log.Printf("UpdatePost: Post %s is owned by user %s", input.PostID, authorID)
+
+	// 4. Check if the current user is the author of the post
+	if authorID != currentUserID {
+		log.Printf("UpdatePost: Unauthorized update attempt by user %s for post %s authored by %s", currentUserID, input.PostID, authorID)
+		return nil, fmt.Errorf("unauthorized: you can only update your own posts")
+	}
+
+	// 5. Update the post
+	updateCtx, cancelUpdate := context.WithTimeout(ctx, 5*time.Second)
+	defer cancelUpdate()
+
+	var updatedAt time.Time
+	updateQuery := `UPDATE posts SET title = $1, content = $2, updated_at = NOW() WHERE post_id = $3 RETURNING updated_at`
+	err = db.QueryRowContext(updateCtx, updateQuery, input.Title, input.Content, input.PostID).Scan(&updatedAt)
+	if err != nil {
+		log.Printf("UpdatePost DB Error updating post %s: %v", input.PostID, err)
+		return nil, fmt.Errorf("failed to update post: %v", err)
+	}
+
+	// 6. Return the updated post
+	// Format the timestamps as RFC3339 strings
+	createdAtStr := createdAt.Format(time.RFC3339)
+	updatedAtStr := updatedAt.Format(time.RFC3339)
+
+	return &model.Post{
+		PostID:    input.PostID,
+		Title:     input.Title,
+		Content:   input.Content,
+		AuthorID:  authorID,
+		CreatedAt: createdAtStr,
+		UpdatedAt: &updatedAtStr,
+	}, nil
 }
 
 // DeletePost resolver - Belongs to mutationResolver
@@ -451,42 +515,3 @@ func (r *queryResolver) GetFeed(ctx context.Context, limit *int32, offset *int32
 	log.Printf("GetFeed: Returning %d posts for user %s", len(posts), currentUserID)
 	return posts, nil
 }
-
-// !!! WARNING !!!
-// The code below was going to be deleted when updating resolvers. It has been copied here so you have
-// one last chance to move it out of harms way if you want. There are two reasons this happens:
-//  - When renaming or deleting a resolver the old code will be put in here. You can safely delete
-//    it when you're done.
-//  - You have helper methods in this file. Move them out to keep these resolver files clean.
-/*
-	func (r *postResolver) CommentsCount(ctx context.Context, obj *model.Post) (int, error) {
-	// Check if we have a valid post ID
-	if obj.PostID == "" {
-		return 0, nil
-	}
-
-	db, err := getDB()
-	if err != nil {
-		log.Printf("CommentsCount DB Error: %v", err)
-		return 0, nil // Return 0 on error to avoid breaking the UI
-	}
-	defer db.Close()
-
-	var count int
-	queryCtx, cancelQuery := context.WithTimeout(ctx, 5*time.Second)
-	defer cancelQuery()
-	err = db.QueryRowContext(queryCtx,
-		"SELECT COUNT(*) FROM comments WHERE post_id = $1",
-		obj.PostID).Scan(&count)
-	if err != nil {
-		log.Printf("CommentsCount DB Error counting comments: %v", err)
-		return 0, nil
-	}
-
-	return count, nil
-}
-func (r *postResolver) Comments(ctx context.Context, obj *model.Post) ([]*model.Comment, error) {
-	// Return an empty array by default
-	return []*model.Comment{}, nil
-}
-*/

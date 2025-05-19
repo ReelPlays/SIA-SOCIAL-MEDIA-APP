@@ -1,6 +1,7 @@
+// src/components/FollowButton.tsx
 import React, { useState, useEffect } from 'react';
 import { useMutation } from '@apollo/client';
-import { Button, CircularProgress } from '@mui/material';
+import { Button, CircularProgress, useTheme } from '@mui/material';
 import { Add, Check } from '@mui/icons-material';
 import { FOLLOW_USER, UNFOLLOW_USER } from '../graphql/mutations';
 
@@ -8,7 +9,6 @@ interface FollowButtonProps {
   userIdToFollow: string;
   initialIsFollowing: boolean;
   currentUserId?: string | null;
-  // Add callback prop to notify parent of status change
   onUpdate?: (userId: string, newStatus: boolean) => void;
 }
 
@@ -16,9 +16,9 @@ const FollowButton: React.FC<FollowButtonProps> = ({
   userIdToFollow,
   initialIsFollowing,
   currentUserId,
-  onUpdate, // Destructure the new prop
+  onUpdate,
 }) => {
-  // Internal state still useful for reflecting prop changes
+  const theme = useTheme();
   const [isFollowing, setIsFollowing] = useState(initialIsFollowing);
 
   useEffect(() => {
@@ -26,37 +26,37 @@ const FollowButton: React.FC<FollowButtonProps> = ({
   }, [initialIsFollowing]);
 
   const [followUser, { loading: followLoading }] = useMutation(FOLLOW_USER, {
-      onCompleted: () => {
-        setIsFollowing(true);
-        onUpdate?.(userIdToFollow, true); // Call callback on success
-      },
-      onError: (err) => {
-          console.error("Follow Error:", err);
-          // Revert UI immediately if needed, parent state handles persistence
-          setIsFollowing(false);
-          onUpdate?.(userIdToFollow, false); // Notify parent of failed attempt revert
-      }
+    onCompleted: () => {
+      setIsFollowing(true);
+      onUpdate?.(userIdToFollow, true);
+    },
+    onError: (err) => {
+      console.error("Follow Error:", err);
+      setIsFollowing(false);
+      onUpdate?.(userIdToFollow, false);
+    }
   });
 
   const [unfollowUser, { loading: unfollowLoading }] = useMutation(UNFOLLOW_USER, {
-     onCompleted: () => {
-       setIsFollowing(false);
-       onUpdate?.(userIdToFollow, false); // Call callback on success
-     },
-      onError: (err) => {
-          console.error("Unfollow Error:", err);
-          setIsFollowing(true); // Revert UI
-          onUpdate?.(userIdToFollow, true); // Notify parent of failed attempt revert
-      }
+    onCompleted: () => {
+      setIsFollowing(false);
+      onUpdate?.(userIdToFollow, false);
+    },
+    onError: (err) => {
+      console.error("Unfollow Error:", err);
+      setIsFollowing(true);
+      onUpdate?.(userIdToFollow, true);
+    }
   });
 
-  const handleFollowToggle = () => {
-    if (isLoading) return; // Prevent double clicks
+  const handleFollowToggle = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (isLoading) return;
 
     if (isFollowing) {
-        unfollowUser({ variables: { userIdToUnfollow: userIdToFollow } });
+      unfollowUser({ variables: { userIdToUnfollow: userIdToFollow } });
     } else {
-        followUser({ variables: { userIdToFollow: userIdToFollow } });
+      followUser({ variables: { userIdToFollow: userIdToFollow } });
     }
   };
 
@@ -73,9 +73,25 @@ const FollowButton: React.FC<FollowButtonProps> = ({
       onClick={handleFollowToggle}
       disabled={isLoading}
       startIcon={isLoading ? <CircularProgress size={16} color="inherit" /> : (isFollowing ? <Check /> : <Add />)}
-      sx={{ ml: 1, textTransform: 'none', minWidth: '80px', height: '28px' }} // Adjust styling
+      sx={{ 
+        ml: 1, 
+        minWidth: '90px', 
+        height: '32px',
+        borderRadius: '20px',
+        fontSize: '0.75rem',
+        textTransform: 'none',
+        fontWeight: 600,
+        boxShadow: 'none',
+        borderColor: isFollowing ? theme.palette.primary.main : 'transparent',
+        color: isFollowing ? theme.palette.primary.main : '#fff',
+        '&:hover': {
+          boxShadow: 'none',
+          borderColor: isFollowing ? theme.palette.primary.dark : 'transparent',
+          backgroundColor: isFollowing ? 'rgba(129, 93, 171, 0.1)' : theme.palette.primary.dark,
+        }
+      }}
     >
-      {isLoading ? '...' : (isFollowing ? 'Following' : 'Follow')}
+      {isLoading ? 'Loading...' : (isFollowing ? 'Following' : 'Follow')}
     </Button>
   );
 };

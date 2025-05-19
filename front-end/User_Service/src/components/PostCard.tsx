@@ -1,3 +1,4 @@
+// src/components/PostCard.tsx
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
@@ -16,17 +17,21 @@ import {
   DialogContentText,
   DialogTitle,
   Button,
-  CircularProgress
+  CircularProgress,
+  useTheme,
+  Card,
+  CardContent,
+  CardActions,
+  CardHeader
 } from '@mui/material';
 import {
   MoreHoriz as MoreHorizIcon,
   ChatBubbleOutline as ChatBubbleOutlineIcon,
   Edit as EditIcon,
-  Delete as DeleteIcon
+  Delete as DeleteIcon,
+  Share as ShareIcon
 } from '@mui/icons-material';
 import { formatDistanceToNow } from 'date-fns';
-import { useMutation } from '@apollo/client';
-import { DELETE_POST } from '../graphql/mutations';
 import FollowButton from './FollowButton';
 import LikeButton from './LikeButton';
 import CommentsSection from './CommentsSection';
@@ -64,55 +69,55 @@ const PostCard: React.FC<PostCardProps> = ({
   onLikeUpdate
 }) => {
   const navigate = useNavigate();
+  const theme = useTheme();
   const [menuAnchorEl, setMenuAnchorEl] = useState<null | HTMLElement>(null);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [showComments, setShowComments] = useState(false);
   
-  // Delete post mutation
-  const [deletePost, { loading: deleteLoading }] = useMutation(DELETE_POST, {
-    onCompleted: () => {
-      setIsDeleteDialogOpen(false);
-      if (onPostDeleted) onPostDeleted();
-    },
-    onError: (err) => {
-      console.error('Error deleting post:', err);
-      setIsDeleteDialogOpen(false);
-    }
-  });
-  
   const handleMenuOpen = (event: React.MouseEvent<HTMLElement>) => {
     setMenuAnchorEl(event.currentTarget);
+    event.stopPropagation();
   };
   
-  const handleMenuClose = () => {
+  const handleMenuClose = (event?: React.MouseEvent) => {
     setMenuAnchorEl(null);
+    event?.stopPropagation();
   };
   
-  const handleEditClick = () => {
-    handleMenuClose();
+  const handleEditClick = (event?: React.MouseEvent) => {
+    handleMenuClose(event);
     setIsEditDialogOpen(true);
   };
   
-  const handleDeleteClick = () => {
-    handleMenuClose();
+  const handleDeleteClick = (event?: React.MouseEvent) => {
+    handleMenuClose(event);
     setIsDeleteDialogOpen(true);
   };
   
   const handleDeleteConfirm = () => {
-    deletePost({
-      variables: {
-        postId: post.postId
-      }
-    });
+    if (onPostDeleted) onPostDeleted();
+    setIsDeleteDialogOpen(false);
   };
   
-  const handleCommentsToggle = () => {
+  const handleCommentsToggle = (event: React.MouseEvent) => {
+    event.preventDefault();
+    event.stopPropagation();
     setShowComments(prev => !prev);
   };
   
   const handlePostUpdated = () => {
     if (onPostUpdated) onPostUpdated();
+  };
+  
+  const handleCardClick = () => {
+    // Expand comments or navigate to post detail
+    setShowComments(true);
+  };
+  
+  const handleNavigateToProfile = (event: React.MouseEvent) => {
+    event.stopPropagation();
+    navigate(`/profile/${post.author.accountId}`);
   };
   
   const postDate = new Date(post.createdAt);
@@ -123,45 +128,42 @@ const PostCard: React.FC<PostCardProps> = ({
   const isLiked = post.isLiked ?? false;
   
   return (
-    <Paper 
+    <Card 
       elevation={1} 
       sx={{ 
-        mb: 3, 
-        borderRadius: 2, 
+        mb: 2, 
+        borderRadius: 3, 
         overflow: 'hidden',
-        '&:hover': { boxShadow: 2 }
+        cursor: 'pointer',
+        transition: 'all 0.2s ease',
+        '&:hover': { 
+          transform: 'translateY(-2px)',
+          boxShadow: theme.shadows[3]
+        },
+        border: '1px solid rgba(129, 93, 171, 0.1)',
       }}
+      onClick={handleCardClick}
     >
-      <Box sx={{ p: 3 }}>
-        {/* Post Header */}
-        <Box sx={{ display: 'flex', alignItems: 'center', mb: 2, justifyContent: 'space-between' }}>
-          <Box sx={{ display: 'flex', alignItems: 'center' }}>
-            <Avatar
-              sx={{ width: 48, height: 48, mr: 2 }}
-              onClick={() => navigate(`/profile/${post.author.accountId}`)}
-            >
-              {post.author.firstName[0]?.toUpperCase() ?? '?'}
-              {post.author.lastName[0]?.toUpperCase() ?? ''}
-            </Avatar>
-            
-            <Box>
-              <Typography 
-                fontWeight="bold" 
-                sx={{ 
-                  cursor: 'pointer',
-                  '&:hover': { textDecoration: 'underline' }
-                }}
-                onClick={() => navigate(`/profile/${post.author.accountId}`)}
-              >
-                {post.author.firstName} {post.author.lastName}
-              </Typography>
-              
-              <Typography variant="body2" color="text.secondary">
-                {timeAgo}
-              </Typography>
-            </Box>
-          </Box>
-          
+      <CardHeader
+        avatar={
+          <Avatar
+            sx={{ 
+              width: 48, 
+              height: 48,
+              cursor: 'pointer',
+              bgcolor: theme.palette.primary.main,
+              boxShadow: '0 2px 8px rgba(129, 93, 171, 0.2)',
+              '&:hover': {
+                transform: 'scale(1.05)'
+              }
+            }}
+            onClick={handleNavigateToProfile}
+          >
+            {post.author.firstName[0]?.toUpperCase() ?? '?'}
+            {post.author.lastName[0]?.toUpperCase() ?? ''}
+          </Avatar>
+        }
+        action={
           <Box sx={{ display: 'flex', alignItems: 'center' }}>
             {currentUserId && post.author.accountId !== currentUserId && (
               <FollowButton
@@ -180,17 +182,49 @@ const PostCard: React.FC<PostCardProps> = ({
                 aria-controls={menuOpen ? "post-menu" : undefined}
                 aria-expanded={menuOpen ? "true" : undefined}
                 aria-haspopup="true"
-                sx={{ ml: 1 }}
+                sx={{ 
+                  ml: 1,
+                  '&:hover': {
+                    bgcolor: 'rgba(129, 93, 171, 0.1)'
+                  }
+                }}
               >
                 <MoreHorizIcon />
               </IconButton>
             )}
           </Box>
-        </Box>
-        
-        {/* Post Content */}
+        }
+        title={
+          <Typography 
+            fontWeight="bold" 
+            sx={{ 
+              cursor: 'pointer',
+              '&:hover': { textDecoration: 'underline' }
+            }}
+            onClick={handleNavigateToProfile}
+          >
+            {post.author.firstName} {post.author.lastName}
+          </Typography>
+        }
+        subheader={
+          <Typography variant="body2" color="text.secondary">
+            {timeAgo}
+          </Typography>
+        }
+        sx={{ pb: 1 }}
+      />
+      
+      <CardContent sx={{ pt: 0, pb: 1 }}>
         {post.title && (
-          <Typography variant="h6" sx={{ mb: 1, fontWeight: 'medium' }}>
+          <Typography 
+            variant="h6" 
+            sx={{ 
+              mb: 1.5, 
+              fontWeight: '600',
+              fontSize: '1.15rem',
+              lineHeight: 1.3
+            }}
+          >
             {post.title}
           </Typography>
         )}
@@ -198,23 +232,21 @@ const PostCard: React.FC<PostCardProps> = ({
         <Typography 
           variant="body1" 
           sx={{ 
-            mb: 3, 
+            mb: 2, 
             whiteSpace: 'pre-wrap',
-            wordBreak: 'break-word'
+            wordBreak: 'break-word',
+            color: theme.palette.text.secondary,
+            lineHeight: 1.6
           }}
         >
           {post.content}
         </Typography>
-        
-        {/* Post Actions */}
-        <Box 
-          sx={{ 
-            display: 'flex', 
-            alignItems: 'center',
-            borderTop: '1px solid #eee',
-            pt: 2
-          }}
-        >
+      </CardContent>
+      
+      <Divider />
+      
+      <CardActions sx={{ px: 2, py: 1, justifyContent: 'space-between' }}>
+        <Box sx={{ display: 'flex', alignItems: 'center' }}>
           <LikeButton
             postId={post.postId}
             initialLikeCount={likesCount}
@@ -232,23 +264,52 @@ const PostCard: React.FC<PostCardProps> = ({
             }}
             onClick={handleCommentsToggle}
           >
-            <IconButton size="small">
+            <IconButton 
+              size="small"
+              sx={{
+                '&:hover': {
+                  color: theme.palette.primary.main,
+                  bgcolor: 'rgba(129, 93, 171, 0.1)'
+                }
+              }}
+            >
               <ChatBubbleOutlineIcon fontSize="small" />
             </IconButton>
-            <Typography variant="body2" color="text.secondary">
+            <Typography variant="body2" color="text.secondary" sx={{ ml: 0.5 }}>
               {post.commentsCount}
             </Typography>
           </Box>
         </Box>
         
-        {/* Comments Section */}
-        {showComments && (
-          <CommentsSection 
+        <IconButton 
+          size="small"
+          onClick={(e) => e.stopPropagation()}
+          sx={{
+            '&:hover': {
+              color: theme.palette.primary.main,
+              bgcolor: 'rgba(129, 93, 171, 0.1)'
+            }
+          }}
+        >
+          <ShareIcon fontSize="small" />
+        </IconButton>
+      </CardActions>
+      
+      {/* Comments Section */}
+      {showComments && (
+        <Box 
+          sx={{ px: 2, pb: 2 }}
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+          }} // Add this handler
+        >
+                <CommentsSection 
             postId={post.postId}
             currentUserId={currentUserId}
           />
-        )}
-      </Box>
+        </Box>
+      )}
       
       {/* Post Menu */}
       <Menu
@@ -264,28 +325,30 @@ const PostCard: React.FC<PostCardProps> = ({
           vertical: 'top',
           horizontal: 'right',
         }}
+        onClick={(e) => e.stopPropagation()}
       >
         <MenuItem onClick={handleEditClick}>
           <ListItemIcon>
-            <EditIcon fontSize="small" />
+            <EditIcon fontSize="small" color="primary" />
           </ListItemIcon>
-          Edit Post
+          <Typography variant="body2">Edit Post</Typography>
         </MenuItem>
         
         <Divider />
         
         <MenuItem onClick={handleDeleteClick}>
           <ListItemIcon>
-            <DeleteIcon fontSize="small" />
+            <DeleteIcon fontSize="small" color="error" />
           </ListItemIcon>
-          Delete Post
+          <Typography variant="body2" color="error">Delete Post</Typography>
         </MenuItem>
       </Menu>
       
       {/* Delete Confirmation Dialog */}
       <Dialog
         open={isDeleteDialogOpen}
-        onClose={() => !deleteLoading && setIsDeleteDialogOpen(false)}
+        onClose={() => setIsDeleteDialogOpen(false)}
+        onClick={(e) => e.stopPropagation()}
       >
         <DialogTitle>Delete Post</DialogTitle>
         <DialogContent>
@@ -295,18 +358,16 @@ const PostCard: React.FC<PostCardProps> = ({
         </DialogContent>
         <DialogActions>
           <Button 
-            onClick={() => setIsDeleteDialogOpen(false)} 
-            disabled={deleteLoading}
+            onClick={() => setIsDeleteDialogOpen(false)}
           >
             Cancel
           </Button>
           <Button 
             onClick={handleDeleteConfirm} 
             color="error" 
-            disabled={deleteLoading}
-            startIcon={deleteLoading ? <CircularProgress size={16} /> : <DeleteIcon />}
+            variant="contained"
           >
-            {deleteLoading ? "Deleting..." : "Delete"}
+            Delete
           </Button>
         </DialogActions>
       </Dialog>
@@ -320,7 +381,7 @@ const PostCard: React.FC<PostCardProps> = ({
           onPostUpdated={handlePostUpdated}
         />
       )}
-    </Paper>
+    </Card>
   );
 };
 

@@ -1,3 +1,4 @@
+// src/App.tsx
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { ApolloProvider } from '@apollo/client';
 import { CssBaseline, ThemeProvider, createTheme, Box } from '@mui/material';
@@ -7,25 +8,94 @@ import Profile from './components/Profile';
 import PostForm from './components/PostForm';
 import Posts from './components/Posts';
 import Navigation from './components/Navigation';
-import NotificationsPage from './components/NotificationsPage'; // <-- Import the new page
+import NotificationsPage from './components/NotificationsPage';
 import { client } from './lib/apollo';
 
-// Create a custom theme (keep your existing theme)
+// Create a custom theme with enhanced styling
 const theme = createTheme({
   palette: {
-    primary: { main: '#1976d2' },
-    secondary: { main: '#dc004e' },
-    background: {
-      default: '#f4f6f8', // Light gray background
+    primary: { 
+      main: '#815DAB',
+      light: '#9d7fbe',
+      dark: '#64468c',
+      contrastText: '#ffffff',
     },
+    secondary: { 
+      main: '#4A4A4A',
+    },
+    background: {
+      default: '#ffffff',
+      paper: '#ffffff',
+    },
+    text: {
+      primary: '#333333',
+      secondary: '#666666',
+    },
+    error: { 
+      main: '#E53935',
+    },
+    info: {
+      main: '#1DA1F2', // Twitter blue for interactive elements
+    }
   },
   typography: {
-    fontFamily: 'Roboto, sans-serif',
-    h4: { fontWeight: 700 },
-    body1: { fontSize: '1rem' },
+    fontFamily: '"Segoe UI", Roboto, "Helvetica Neue", sans-serif',
+    h6: { 
+      fontWeight: 600,
+      fontSize: '1.15rem', 
+    },
+    body1: { 
+      fontSize: '0.95rem', 
+    },
+    body2: { 
+      fontSize: '0.875rem', 
+    },
+    button: { 
+      textTransform: 'none',
+      fontWeight: 500,
+    },
   },
   shape: {
-    borderRadius: 12,
+    borderRadius: 4,
+  },
+  components: {
+    MuiButton: {
+      styleOverrides: {
+        root: {
+          boxShadow: 'none',
+          '&:hover': {
+            boxShadow: 'none',
+          },
+        },
+        contained: {
+          '&:hover': {
+            backgroundColor: '#64468c',
+          },
+        },
+      },
+    },
+    MuiPaper: {
+      styleOverrides: {
+        root: {
+          boxShadow: 'none',
+        },
+      },
+    },
+    MuiDivider: {
+      styleOverrides: {
+        root: {
+          borderColor: '#f0f0f0',
+        },
+      },
+    },
+    MuiAvatar: {
+      styleOverrides: {
+        root: {
+          fontSize: '1rem',
+          fontWeight: 'bold',
+        },
+      },
+    },
   },
 });
 
@@ -35,19 +105,16 @@ function App() {
       <ThemeProvider theme={theme}>
         <CssBaseline />
         <Router>
-          <Navigation />
-          {/* Add some padding top if Navigation is fixed, otherwise adjust as needed */}
-          <Box sx={{ pt: { xs: 8, sm: 9 } }}> {/* Adjust padding top based on AppBar height */}
+          <Box sx={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
+            <Navigation />
             <Routes>
               <Route path="/login" element={<LoginForm />} />
               <Route path="/signup" element={<SignupForm />} />
-              <Route path="/profile" element={<Profile />} /> Assuming this is the logged-in user's profile
-              {/* Add route for viewing other profiles if needed, e.g., /profile/:userId */}
+              <Route path="/profile" element={<Profile />} />
               <Route path="/posts" element={<Posts />} />
               <Route path="/create-post" element={<PostForm />} />
-              <Route path="/notifications" element={<NotificationsPage />} /> {/* <-- Add route for notifications */}
-              <Route path="/" element={<Navigate to="/posts" replace />} /> {/* Default route */}
-              {/* Add other routes, e.g., for individual posts /posts/:postId */}
+              <Route path="/notifications" element={<NotificationsPage />} />
+              <Route path="/" element={<Navigate to="/posts" replace />} />
             </Routes>
           </Box>
         </Router>

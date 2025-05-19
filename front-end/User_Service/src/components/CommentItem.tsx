@@ -1,3 +1,5 @@
+// src/components/CommentItem.tsx - Update to fix the onClose type error
+
 import React, { useState } from 'react';
 import { useMutation } from '@apollo/client';
 import {
@@ -15,7 +17,8 @@ import {
   DialogContentText,
   DialogTitle,
   Button,
-  CircularProgress
+  CircularProgress,
+  useTheme
 } from '@mui/material';
 import {
   MoreVert as MoreVertIcon,
@@ -51,6 +54,7 @@ const CommentItem: React.FC<CommentItemProps> = ({
   onCommentDeleted,
   onCommentUpdated
 }) => {
+  const theme = useTheme();
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const [isEditing, setIsEditing] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
@@ -68,24 +72,32 @@ const CommentItem: React.FC<CommentItemProps> = ({
   });
 
   const handleMenuOpen = (event: React.MouseEvent<HTMLElement>) => {
+    event.stopPropagation();
     setAnchorEl(event.currentTarget);
   };
 
-  const handleMenuClose = () => {
+  // Modified handler to match the expected type for Menu onClose
+  const handleMenuClose = (event?: React.MouseEvent | {}, reason?: "backdropClick" | "escapeKeyDown") => {
+    if (event && 'stopPropagation' in event) {
+      event.stopPropagation();
+    }
     setAnchorEl(null);
   };
 
-  const handleEditClick = () => {
+  const handleEditClick = (event?: React.MouseEvent) => {
+    if (event) event.stopPropagation();
     handleMenuClose();
     setIsEditing(true);
   };
 
-  const handleDeleteClick = () => {
+  const handleDeleteClick = (event?: React.MouseEvent) => {
+    if (event) event.stopPropagation();
     handleMenuClose();
     setIsDeleteDialogOpen(true);
   };
 
-  const handleDeleteConfirm = () => {
+  const handleDeleteConfirm = (event?: React.MouseEvent) => {
+    if (event) event.stopPropagation();
     deleteComment({
       variables: {
         commentId: comment.commentId
@@ -110,7 +122,7 @@ const CommentItem: React.FC<CommentItemProps> = ({
 
   if (isEditing) {
     return (
-      <Box sx={{ mb: 2, pl: 2, pr: 2 }}>
+      <Box sx={{ mb: 2 }}>
         <CommentForm
           postId={postId}
           commentId={comment.commentId}
@@ -123,37 +135,71 @@ const CommentItem: React.FC<CommentItemProps> = ({
   }
 
   return (
-    <Box sx={{ mb: 2, pl: 2, pr: 2 }}>
+    <Box 
+      sx={{ 
+        mb: 2.5,
+        transition: 'all 0.2s ease',
+      }}
+      className="fade-in"
+    >
       <Box sx={{ display: 'flex' }}>
-        <Avatar sx={{ width: 36, height: 36, mr: 2 }}>
+        <Avatar 
+          sx={{ 
+            width: 36, 
+            height: 36, 
+            mr: 1.5,
+            bgcolor: theme.palette.primary.main, 
+            fontWeight: 'bold',
+            fontSize: '0.9rem',
+            boxShadow: '0 2px 5px rgba(129, 93, 171, 0.2)'
+          }}
+        >
           {comment.author.firstName[0]?.toUpperCase() ?? '?'}
           {comment.author.lastName[0]?.toUpperCase() ?? ''}
         </Avatar>
         
         <Box sx={{ flex: 1 }}>
           <Box sx={{ 
-            bgcolor: '#f0f2f5', 
-            p: 1.5, 
-            borderRadius: 2,
-            position: 'relative'
+            bgcolor: 'rgba(0,0,0,0.04)', 
+            p: 2, 
+            borderRadius: 3,
+            position: 'relative',
+            '&:hover': {
+              bgcolor: 'rgba(0,0,0,0.05)',
+            }
           }}>
-            <Typography variant="subtitle2" sx={{ fontWeight: 'bold' }}>
+            <Typography variant="subtitle2" sx={{ fontWeight: 'bold', mb: 0.5 }}>
               {comment.author.firstName} {comment.author.lastName}
             </Typography>
             
-            <Typography variant="body2" sx={{ whiteSpace: 'pre-wrap' }}>
+            <Typography 
+              variant="body2" 
+              sx={{ 
+                whiteSpace: 'pre-wrap',
+                color: theme.palette.text.secondary,
+                lineHeight: 1.5
+              }}
+            >
               {comment.content}
             </Typography>
           </Box>
           
           <Box sx={{ display: 'flex', alignItems: 'center', mt: 0.5, ml: 1 }}>
-            <Typography variant="caption" color="text.secondary">
+            <Typography 
+              variant="caption" 
+              color="text.secondary"
+              sx={{ fontSize: '0.7rem' }}
+            >
               {timeAgo}
             </Typography>
             
             {wasEdited && (
-              <Typography variant="caption" color="text.secondary" sx={{ ml: 1 }}>
-                (edited)
+              <Typography 
+                variant="caption" 
+                color="text.secondary" 
+                sx={{ ml: 1, fontSize: '0.7rem' }}
+              >
+                • edited
               </Typography>
             )}
           </Box>
@@ -168,6 +214,12 @@ const CommentItem: React.FC<CommentItemProps> = ({
               aria-controls={menuOpen ? "comment-menu" : undefined}
               aria-expanded={menuOpen ? "true" : undefined}
               aria-haspopup="true"
+              sx={{
+                p: 0.5,
+                '&:hover': {
+                  backgroundColor: 'rgba(129, 93, 171, 0.1)'
+                }
+              }}
             >
               <MoreVertIcon fontSize="small" />
             </IconButton>
@@ -177,6 +229,7 @@ const CommentItem: React.FC<CommentItemProps> = ({
               anchorEl={anchorEl}
               open={menuOpen}
               onClose={handleMenuClose}
+              onClick={(e) => e.stopPropagation()}
               anchorOrigin={{
                 vertical: 'bottom',
                 horizontal: 'right',
@@ -188,18 +241,18 @@ const CommentItem: React.FC<CommentItemProps> = ({
             >
               <MenuItem onClick={handleEditClick}>
                 <ListItemIcon>
-                  <EditIcon fontSize="small" />
+                  <EditIcon fontSize="small" color="primary" />
                 </ListItemIcon>
-                Edit
+                <Typography variant="body2">Edit</Typography>
               </MenuItem>
               
               <Divider />
               
               <MenuItem onClick={handleDeleteClick}>
                 <ListItemIcon>
-                  <DeleteIcon fontSize="small" />
+                  <DeleteIcon fontSize="small" color="error" />
                 </ListItemIcon>
-                Delete
+                <Typography variant="body2" color="error">Delete</Typography>
               </MenuItem>
             </Menu>
           </Box>
@@ -210,8 +263,9 @@ const CommentItem: React.FC<CommentItemProps> = ({
       <Dialog
         open={isDeleteDialogOpen}
         onClose={() => !deleteLoading && setIsDeleteDialogOpen(false)}
+        onClick={(e) => e.stopPropagation()}
       >
-        <DialogTitle>Delete Comment</DialogTitle>
+        <DialogTitle sx={{ pb: 1 }}>Delete Comment</DialogTitle>
         <DialogContent>
           <DialogContentText>
             Are you sure you want to delete this comment? This action cannot be undone.
@@ -227,8 +281,9 @@ const CommentItem: React.FC<CommentItemProps> = ({
           <Button 
             onClick={handleDeleteConfirm} 
             color="error" 
+            variant="contained"
             disabled={deleteLoading}
-            startIcon={deleteLoading ? <CircularProgress size={16} /> : <DeleteIcon />}
+            startIcon={deleteLoading ? <CircularProgress size={16} color="inherit" /> : <DeleteIcon />}
           >
             {deleteLoading ? "Deleting..." : "Delete"}
           </Button>

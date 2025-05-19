@@ -1,69 +1,52 @@
-import React, { useState, useEffect } from 'react'; // Import useEffect
+// src/components/Navigation.tsx
+import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { useQuery } from '@apollo/client'; // Import useQuery
+import { useQuery } from '@apollo/client';
 import {
   AppBar,
   Toolbar,
   Typography,
-  Button,
   IconButton,
   Box,
   Avatar,
+  Badge,
   Menu,
   MenuItem,
   Divider,
-  useMediaQuery,
   useTheme,
-  Drawer,
-  List,
-  ListItem,
-  ListItemIcon,
-  ListItemText,
-  Container,
-  Badge, // Import Badge
 } from '@mui/material';
 import {
-  Menu as MenuIcon,
   Home as HomeIcon,
+  Notifications as NotificationsIcon,
   Add as AddIcon,
-  Person as PersonIcon,
-  Login as LoginIcon,
   Logout as LogoutIcon,
-  Notifications as NotificationsIcon, // Import NotificationsIcon
+  Person as PersonIcon,
 } from '@mui/icons-material';
 import { supabase } from '../lib/supabase';
-import { GET_MY_NOTIFICATIONS } from '../graphql/queries'; // Import the query
+import { GET_MY_NOTIFICATIONS } from '../graphql/queries';
 
 export default function Navigation() {
   const navigate = useNavigate();
   const location = useLocation();
   const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
-
-  const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
-  const [mobileOpen, setMobileOpen] = useState(false);
+  const [profileAnchorEl, setProfileAnchorEl] = useState<null | HTMLElement>(null);
   const [user, setUser] = useState<any>(null);
 
   // Fetch Notifications Query
-  const { data: notificationData, loading: notificationLoading, error: notificationError, refetch: refetchNotifications } = useQuery(GET_MY_NOTIFICATIONS, {
-    variables: { filter: 'unread', limit: 100 }, // Fetch up to 100 unread notifications for count
-    skip: !user, // Skip query if user is not logged in
-    pollInterval: 30000, // Optional: Poll every 30 seconds
-    fetchPolicy: 'network-only', // Ensure fresh data is fetched
-    notifyOnNetworkStatusChange: true, // Useful for showing loading states
+  const { data: notificationData } = useQuery(GET_MY_NOTIFICATIONS, {
+    variables: { filter: 'unread', limit: 100 },
+    skip: !user,
+    pollInterval: 30000,
   });
 
   // Calculate unread count
   const unreadCount = notificationData?.getMyNotifications?.length || 0;
 
-  // Check if user is logged in and refetch notifications on user change
+  // Check if user is logged in
   useEffect(() => {
     const checkUser = async () => {
       const { data } = await supabase.auth.getUser();
       setUser(data.user);
-      if (data.user) {
-         refetchNotifications(); // Refetch notifications when user logs in
-      }
     };
     checkUser();
 
@@ -71,197 +54,162 @@ export default function Navigation() {
     const { data: authListener } = supabase.auth.onAuthStateChange(
       (_event, session) => {
         setUser(session?.user ?? null);
-        if (session?.user) {
-           refetchNotifications(); // Refetch on auth change
-        }
       }
     );
 
-    // Cleanup listener on component unmount
     return () => {
       authListener?.subscription.unsubscribe();
     };
-  }, [refetchNotifications]); // Add refetchNotifications to dependency array
+  }, []);
 
   const handleProfileMenuOpen = (event: React.MouseEvent<HTMLElement>) => {
-    setAnchorEl(event.currentTarget);
+    setProfileAnchorEl(event.currentTarget);
   };
 
   const handleMenuClose = () => {
-    setAnchorEl(null);
-  };
-
-  const handleDrawerToggle = () => {
-    setMobileOpen(!mobileOpen);
+    setProfileAnchorEl(null);
   };
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
-    setUser(null); // Clear user state immediately
-    // No need to navigate here if onAuthStateChange handles it
+    setUser(null);
     handleMenuClose();
+    navigate('/login');
   };
-
-  const handleNotificationClick = () => {
-    // Navigate to a notifications page (create this route/page)
-    navigate('/notifications');
-     if(isMobile) handleDrawerToggle(); // Close drawer if mobile
-  };
-
-  const menuId = 'primary-account-menu';
-  const isMenuOpen = Boolean(anchorEl);
-
-  const renderMenu = (
-    <Menu
-      anchorEl={anchorEl}
-      id={menuId}
-      keepMounted
-      open={isMenuOpen}
-      onClose={handleMenuClose}
-    >
-      <MenuItem onClick={() => { navigate('/profile'); handleMenuClose(); }}>
-        Profile
-      </MenuItem>
-      <Divider />
-      <MenuItem onClick={handleLogout}>
-        Logout
-      </MenuItem>
-    </Menu>
-  );
-
-  const drawer = (
-    <Box onClick={handleDrawerToggle} sx={{ textAlign: 'center' }}>
-      <Typography variant="h6" sx={{ my: 2 }}>
-        SIA Social
-      </Typography>
-      <Divider />
-      <List>
-        {user && ( // Only show these links if logged in
-          <>
-            <ListItem button onClick={() => navigate('/posts')}>
-              <ListItemIcon>
-                <HomeIcon />
-              </ListItemIcon>
-              <ListItemText primary="Posts" />
-            </ListItem>
-            <ListItem button onClick={handleNotificationClick}> {/* Add Notifications link */}
-              <ListItemIcon>
-                 <Badge badgeContent={unreadCount} color="error">
-                    <NotificationsIcon />
-                 </Badge>
-              </ListItemIcon>
-              <ListItemText primary="Notifications" />
-            </ListItem>
-            <ListItem button onClick={() => navigate('/create-post')}>
-              <ListItemIcon>
-                <AddIcon />
-              </ListItemIcon>
-              <ListItemText primary="Create Post" />
-            </ListItem>
-            <ListItem button onClick={() => navigate('/profile')}>
-              <ListItemIcon>
-                <PersonIcon />
-              </ListItemIcon>
-              <ListItemText primary="Profile" />
-            </ListItem>
-          </>
-        )}
-        {!user ? (
-          <ListItem button onClick={() => navigate('/login')}>
-            <ListItemIcon>
-              <LoginIcon />
-            </ListItemIcon>
-            <ListItemText primary="Login" />
-          </ListItem>
-        ) : (
-          <ListItem button onClick={handleLogout}>
-            <ListItemIcon>
-              <LogoutIcon />
-            </ListItemIcon>
-            <ListItemText primary="Logout" />
-          </ListItem>
-        )}
-      </List>
-    </Box>
-  );
 
   // Don't show navigation on login and signup pages
   if (location.pathname === '/login' || location.pathname === '/signup') {
     return null;
   }
 
+  const isProfileOpen = Boolean(profileAnchorEl);
+
   return (
-    <Box sx={{ flexGrow: 1 }}>
-      <AppBar position="fixed" sx={{ backgroundColor: 'white', boxShadow: 1 }}>
-        <Toolbar>
-          <Typography variant="h6" component="div" sx={{ flexGrow: 1, color: '#815DAB', fontWeight: 'bold' }}>
-            ConnectMe
-          </Typography>
+    <AppBar 
+      position="fixed" 
+      sx={{ 
+        backgroundColor: 'white', 
+        boxShadow: 'none',
+        borderBottom: '1px solid #f0f0f0',
+        zIndex: theme.zIndex.drawer + 1,
+      }}
+    >
+      <Toolbar sx={{ px: { xs: 2, md: 4 }, justifyContent: 'space-between' }}>
+        {/* Logo */}
+        <Typography 
+          variant="h6" 
+          component="div" 
+          sx={{ 
+            color: '#815DAB', 
+            fontWeight: 'bold',
+            cursor: 'pointer' 
+          }}
+          onClick={() => navigate('/')}
+        >
+          ConnectMe
+        </Typography>
+        
+        {/* Icon Navigation */}
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+          <IconButton 
+            color="inherit" 
+            onClick={() => navigate('/posts')}
+            sx={{ 
+              color: location.pathname === '/posts' ? '#815DAB' : '#666',
+              '&:hover': { color: '#815DAB' }
+            }}
+          >
+            <HomeIcon />
+          </IconButton>
           
-          {user && (
-            <Box sx={{ display: 'flex' }}>
-              <IconButton color="inherit" onClick={() => navigate('/posts')}>
-                <HomeIcon sx={{ color: '#333' }} />
-              </IconButton>
-              <IconButton 
-                color="inherit" 
-                onClick={handleNotificationClick}
-              >
-                <Badge badgeContent={unreadCount} color="error">
-                  <NotificationsIcon sx={{ color: '#333' }} />
-                </Badge>
-              </IconButton>
-              <IconButton color="inherit" onClick={() => navigate('/create-post')}>
-                <AddIcon sx={{ color: '#333' }} />
-              </IconButton>
-              <IconButton
-                edge="end"
-                aria-label="account of current user"
-                aria-controls={menuId}
-                aria-haspopup="true"
-                onClick={handleProfileMenuOpen}
-                color="inherit"
-              >
-                <Avatar sx={{ width: 32, height: 32, bgcolor: '#815DAB' }}>
-                  {user.email ? user.email[0].toUpperCase() : '?'}
-                </Avatar>
-              </IconButton>
-            </Box>
-          )}
+          <IconButton 
+            color="inherit" 
+            onClick={() => navigate('/notifications')}
+            sx={{ 
+              color: location.pathname === '/notifications' ? '#815DAB' : '#666',
+              '&:hover': { color: '#815DAB' }
+            }}
+          >
+            <Badge badgeContent={unreadCount} color="error">
+              <NotificationsIcon />
+            </Badge>
+          </IconButton>
           
-          {!user && (
-            <Button 
+          <IconButton 
+            color="inherit" 
+            onClick={() => navigate('/create-post')}
+            sx={{ 
+              color: location.pathname === '/create-post' ? '#815DAB' : '#666',
+              '&:hover': { color: '#815DAB' }
+            }}
+          >
+            <AddIcon />
+          </IconButton>
+          
+          {user ? (
+            <IconButton
+              edge="end"
+              aria-label="account"
+              aria-haspopup="true"
+              onClick={handleProfileMenuOpen}
+              color="inherit"
+              sx={{ ml: 1 }}
+            >
+              <Avatar 
+                sx={{ 
+                  width: 32, 
+                  height: 32, 
+                  bgcolor: '#815DAB',
+                  border: '2px solid #f0f0f0'
+                }}
+              >
+                {user.email ? user.email[0].toUpperCase() : '?'}
+              </Avatar>
+            </IconButton>
+          ) : (
+            <IconButton 
               color="inherit" 
               onClick={() => navigate('/login')}
-              sx={{ color: '#815DAB' }}
+              sx={{ 
+                color: '#666',
+                '&:hover': { color: '#815DAB' }
+              }}
             >
-              Login
-            </Button>
+              <PersonIcon />
+            </IconButton>
           )}
-        </Toolbar>
-      </AppBar>
-
-      {/* Mobile Drawer - keep this for mobile responsiveness */}
-      <Drawer
-        variant="temporary"
-        open={mobileOpen}
-        onClose={handleDrawerToggle}
-        ModalProps={{
-          keepMounted: true,
-        }}
-        sx={{
-          display: { xs: 'block', sm: 'none' },
-          '& .MuiDrawer-paper': { boxSizing: 'border-box', width: 240 },
-        }}
-      >
-        {drawer}
-      </Drawer>
-
-      {/* Profile Menu */}
-      {renderMenu}
-      
-      {/* Add padding to account for fixed AppBar */}
-      <Box sx={{ height: { xs: 56, sm: 64 } }} />
-    </Box>
+        </Box>
+        
+        {/* Profile Menu */}
+        <Menu
+          id="profile-menu"
+          anchorEl={profileAnchorEl}
+          keepMounted
+          open={isProfileOpen}
+          onClose={handleMenuClose}
+          transformOrigin={{ horizontal: 'right', vertical: 'top' }}
+          anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
+          PaperProps={{
+            elevation: 1,
+            sx: { 
+              mt: 1, 
+              width: 200,
+              borderRadius: 2,
+              border: '1px solid #f0f0f0'
+            }
+          }}
+        >
+          <MenuItem onClick={() => { navigate('/profile'); handleMenuClose(); }}>
+            <PersonIcon fontSize="small" sx={{ mr: 1.5 }} />
+            Profile
+          </MenuItem>
+          <Divider />
+          <MenuItem onClick={handleLogout} sx={{ color: '#f44336' }}>
+            <LogoutIcon fontSize="small" sx={{ mr: 1.5 }} />
+            Logout
+          </MenuItem>
+        </Menu>
+      </Toolbar>
+    </AppBar>
   );
 }
