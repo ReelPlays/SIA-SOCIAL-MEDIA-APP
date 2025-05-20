@@ -3,8 +3,6 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
   Box, 
-  Paper, 
-  Avatar, 
   Typography, 
   IconButton, 
   Menu, 
@@ -17,7 +15,6 @@ import {
   DialogContentText,
   DialogTitle,
   Button,
-  CircularProgress,
   useTheme,
   Card,
   CardContent,
@@ -36,6 +33,7 @@ import FollowButton from './FollowButton';
 import LikeButton from './LikeButton';
 import CommentsSection from './CommentsSection';
 import EditPostForm from './EditPostForm';
+import UserAvatar from './UserAvatar';
 
 interface PostCardProps {
   post: {
@@ -58,6 +56,7 @@ interface PostCardProps {
   onPostUpdated?: () => void;
   onFollowUpdate?: (userId: string, isFollowing: boolean) => void;
   onLikeUpdate?: (postId: string, isLiked: boolean, likeCount: number) => void;
+  renderContent?: (content: string) => React.ReactNode; // Added render function prop
 }
 
 const PostCard: React.FC<PostCardProps> = ({
@@ -66,7 +65,8 @@ const PostCard: React.FC<PostCardProps> = ({
   onPostDeleted,
   onPostUpdated,
   onFollowUpdate,
-  onLikeUpdate
+  onLikeUpdate,
+  renderContent
 }) => {
   const navigate = useNavigate();
   const theme = useTheme();
@@ -80,18 +80,31 @@ const PostCard: React.FC<PostCardProps> = ({
     event.stopPropagation();
   };
   
-  const handleMenuClose = (event?: React.MouseEvent) => {
+  const handleMenuClose = (
+    event: React.MouseEvent<HTMLElement> | {}, 
+    reason?: "backdropClick" | "escapeKeyDown"
+  ) => {
+    if (event && 'stopPropagation' in event) {
+      event.stopPropagation();
+    }
     setMenuAnchorEl(null);
-    event?.stopPropagation();
   };
   
-  const handleEditClick = (event?: React.MouseEvent) => {
-    handleMenuClose(event);
+  const handleEditClick = (event?: React.MouseEvent<HTMLElement>) => {
+    if (event) {
+      handleMenuClose(event);
+    } else {
+      handleMenuClose({});
+    }
     setIsEditDialogOpen(true);
   };
-  
-  const handleDeleteClick = (event?: React.MouseEvent) => {
-    handleMenuClose(event);
+
+  const handleDeleteClick = (event?: React.MouseEvent<HTMLElement>) => {
+    if (event) {
+      handleMenuClose(event);
+    } else {
+      handleMenuClose({});
+    }
     setIsDeleteDialogOpen(true);
   };
   
@@ -141,27 +154,26 @@ const PostCard: React.FC<PostCardProps> = ({
           boxShadow: theme.shadows[3]
         },
         border: '1px solid rgba(129, 93, 171, 0.1)',
+        width: '100%',
       }}
       onClick={handleCardClick}
     >
       <CardHeader
         avatar={
-          <Avatar
+          <UserAvatar
+            userId={post.author.accountId}
+            firstName={post.author.firstName}
+            lastName={post.author.lastName}
+            size={48}
             sx={{ 
-              width: 48, 
-              height: 48,
               cursor: 'pointer',
-              bgcolor: theme.palette.primary.main,
               boxShadow: '0 2px 8px rgba(129, 93, 171, 0.2)',
               '&:hover': {
                 transform: 'scale(1.05)'
               }
             }}
             onClick={handleNavigateToProfile}
-          >
-            {post.author.firstName[0]?.toUpperCase() ?? '?'}
-            {post.author.lastName[0]?.toUpperCase() ?? ''}
-          </Avatar>
+          />
         }
         action={
           <Box sx={{ display: 'flex', alignItems: 'center' }}>
@@ -229,18 +241,21 @@ const PostCard: React.FC<PostCardProps> = ({
           </Typography>
         )}
         
-        <Typography 
-          variant="body1" 
-          sx={{ 
-            mb: 2, 
-            whiteSpace: 'pre-wrap',
-            wordBreak: 'break-word',
-            color: theme.palette.text.secondary,
-            lineHeight: 1.6
-          }}
-        >
-          {post.content}
-        </Typography>
+        {/* Use the renderContent function if provided, otherwise fall back to basic rendering */}
+        {renderContent ? renderContent(post.content) : (
+          <Typography 
+            variant="body1" 
+            sx={{ 
+              mb: 2, 
+              whiteSpace: 'pre-wrap',
+              wordBreak: 'break-word',
+              color: theme.palette.text.secondary,
+              lineHeight: 1.6
+            }}
+          >
+            {post.content}
+          </Typography>
+        )}
       </CardContent>
       
       <Divider />
@@ -302,9 +317,9 @@ const PostCard: React.FC<PostCardProps> = ({
           onClick={(e) => {
             e.preventDefault();
             e.stopPropagation();
-          }} // Add this handler
+          }}
         >
-                <CommentsSection 
+          <CommentsSection 
             postId={post.postId}
             currentUserId={currentUserId}
           />

@@ -65,3 +65,43 @@ export const UNFOLLOW_USER = gql`
     }
   }
 `;
+
+export const UPDATE_PROFILE = gql`
+  mutation UpdateProfile(
+    $username: String
+    $firstName: String
+    $lastName: String
+    $middleName: String
+    $bio: String
+    $profilePictureURL: String
+    $bannerPictureURL: String
+    $dateOfBirth: String
+    $address: String
+    $phone: String
+  ) {
+    updateProfile(
+      username: $username
+      firstName: $firstName
+      lastName: $lastName
+      middleName: $middleName
+      bio: $bio
+      profilePictureURL: $profilePictureURL
+      bannerPictureURL: $bannerPictureURL
+      dateOfBirth: $dateOfBirth
+      address: $address
+      phone: $phone
+    ) {
+      accountId
+      username
+      firstName
+      lastName
+      middleName
+      bio
+      profilePictureURL
+      bannerPictureURL
+      dateOfBirth
+      address
+      phone
+    }
+  }
+`;

@@ -13,6 +13,7 @@ import {
 import { GET_POST_COMMENTS } from '../graphql/queries';
 import CommentForm from './CommentForm';
 import CommentItem from './CommentItem';
+import UserAvatar from './UserAvatar';
 
 // Define the Comment interface
 interface Comment {

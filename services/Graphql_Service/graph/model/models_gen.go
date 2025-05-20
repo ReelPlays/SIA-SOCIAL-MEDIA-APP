@@ -3,17 +3,23 @@
 package model
 
 type Account struct {
-	AccountID   string  `json:"accountId"`
-	Email       string  `json:"email"`
-	FirstName   string  `json:"firstName"`
-	LastName    string  `json:"lastName"`
-	Address     *string `json:"address,omitempty"`
-	Phone       *string `json:"phone,omitempty"`
-	Age         int32   `json:"age"`
-	Gender      *string `json:"gender,omitempty"`
-	IsFollowing *bool   `json:"isFollowing,omitempty"`
-	CreatedAt   string  `json:"createdAt"`
-	UpdatedAt   *string `json:"updatedAt,omitempty"`
+	AccountID         string  `json:"accountId"`
+	Email             string  `json:"email"`
+	FirstName         string  `json:"firstName"`
+	LastName          string  `json:"lastName"`
+	MiddleName        *string `json:"middleName,omitempty"`
+	Username          *string `json:"username,omitempty"`
+	Bio               *string `json:"bio,omitempty"`
+	ProfilePictureURL *string `json:"profilePictureURL,omitempty"`
+	BannerPictureURL  *string `json:"bannerPictureURL,omitempty"`
+	DateOfBirth       *string `json:"dateOfBirth,omitempty"`
+	Address           *string `json:"address,omitempty"`
+	Phone             *string `json:"phone,omitempty"`
+	Age               int32   `json:"age"`
+	Gender            *string `json:"gender,omitempty"`
+	IsFollowing       *bool   `json:"isFollowing,omitempty"`
+	CreatedAt         string  `json:"createdAt"`
+	UpdatedAt         *string `json:"updatedAt,omitempty"`
 }
 
 type Comment struct {
@@ -35,20 +41,6 @@ type CreatePostInput struct {
 	Title    string `json:"title"`
 	Content  string `json:"content"`
 	AuthorID string `json:"authorId"`
-}
-
-type CreateProfileInput struct {
-	Username          string  `json:"username"`
-	Email             string  `json:"email"`
-	Password          string  `json:"password"`
-	FirstName         *string `json:"firstName,omitempty"`
-	MiddleName        *string `json:"middleName,omitempty"`
-	LastName          *string `json:"lastName,omitempty"`
-	Bio               *string `json:"bio,omitempty"`
-	ProfilePictureURL *string `json:"profilePictureUrl,omitempty"`
-	BannerPictureURL  *string `json:"bannerPictureUrl,omitempty"`
-	DateOfBirth       *string `json:"dateOfBirth,omitempty"`
-	Address           *string `json:"address,omitempty"`
 }
 
 type Mutation struct {
@@ -84,33 +76,20 @@ type Post struct {
 	IsLiked       bool       `json:"isLiked"`
 }
 
-type Profile struct {
-	ProfileID         string  `json:"profileId"`
-	Username          string  `json:"username"`
-	Email             string  `json:"email"`
-	Password          string  `json:"password"`
-	FirstName         *string `json:"firstName,omitempty"`
-	MiddleName        *string `json:"middleName,omitempty"`
-	LastName          *string `json:"lastName,omitempty"`
-	Bio               *string `json:"bio,omitempty"`
-	ProfilePictureURL *string `json:"profilePictureUrl,omitempty"`
-	BannerPictureURL  *string `json:"bannerPictureUrl,omitempty"`
-	DateOfBirth       *string `json:"dateOfBirth,omitempty"`
-	Address           *string `json:"address,omitempty"`
-}
-
 type Query struct {
 }
 
 type RegisterInput struct {
-	Email     string  `json:"email"`
-	Password  string  `json:"password"`
-	FirstName string  `json:"firstName"`
-	LastName  string  `json:"lastName"`
-	Address   *string `json:"address,omitempty"`
-	Phone     *string `json:"phone,omitempty"`
-	Age       int32   `json:"age"`
-	Gender    *string `json:"gender,omitempty"`
+	Email      string  `json:"email"`
+	Password   string  `json:"password"`
+	FirstName  string  `json:"firstName"`
+	LastName   string  `json:"lastName"`
+	MiddleName *string `json:"middleName,omitempty"`
+	Username   *string `json:"username,omitempty"`
+	Address    *string `json:"address,omitempty"`
+	Phone      *string `json:"phone,omitempty"`
+	Age        int32   `json:"age"`
+	Gender     *string `json:"gender,omitempty"`
 }
 
 type Todo struct {

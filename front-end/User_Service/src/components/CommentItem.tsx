@@ -1,11 +1,9 @@
-// src/components/CommentItem.tsx - Update to fix the onClose type error
-
+// src/components/CommentItem.tsx
 import React, { useState } from 'react';
 import { useMutation } from '@apollo/client';
 import {
   Box,
   Typography,
-  Avatar,
   IconButton,
   Menu,
   MenuItem,
@@ -28,6 +26,7 @@ import {
 import { formatDistanceToNow } from 'date-fns';
 import { DELETE_COMMENT } from '../graphql/mutations';
 import CommentForm from './CommentForm';
+import UserAvatar from './UserAvatar';
 
 interface CommentItemProps {
   comment: {
@@ -77,22 +76,28 @@ const CommentItem: React.FC<CommentItemProps> = ({
   };
 
   // Modified handler to match the expected type for Menu onClose
-  const handleMenuClose = (event?: React.MouseEvent | {}, reason?: "backdropClick" | "escapeKeyDown") => {
+  const handleMenuClose = (event?: React.MouseEvent<HTMLElement> | {}, reason?: "backdropClick" | "escapeKeyDown") => {
     if (event && 'stopPropagation' in event) {
       event.stopPropagation();
     }
     setAnchorEl(null);
   };
 
-  const handleEditClick = (event?: React.MouseEvent) => {
-    if (event) event.stopPropagation();
-    handleMenuClose();
+  const handleEditClick = (event?: React.MouseEvent<HTMLElement>) => {
+    if (event) {
+      handleMenuClose(event);
+    } else {
+      handleMenuClose({});
+    }
     setIsEditing(true);
   };
 
-  const handleDeleteClick = (event?: React.MouseEvent) => {
-    if (event) event.stopPropagation();
-    handleMenuClose();
+  const handleDeleteClick = (event?: React.MouseEvent<HTMLElement>) => {
+    if (event) {
+      handleMenuClose(event);
+    } else {
+      handleMenuClose({});
+    }
     setIsDeleteDialogOpen(true);
   };
 
@@ -143,20 +148,18 @@ const CommentItem: React.FC<CommentItemProps> = ({
       className="fade-in"
     >
       <Box sx={{ display: 'flex' }}>
-        <Avatar 
+        <UserAvatar 
+          userId={comment.author.accountId}
+          firstName={comment.author.firstName}
+          lastName={comment.author.lastName}
+          size={36}
           sx={{ 
-            width: 36, 
-            height: 36, 
             mr: 1.5,
-            bgcolor: theme.palette.primary.main, 
             fontWeight: 'bold',
             fontSize: '0.9rem',
             boxShadow: '0 2px 5px rgba(129, 93, 171, 0.2)'
           }}
-        >
-          {comment.author.firstName[0]?.toUpperCase() ?? '?'}
-          {comment.author.lastName[0]?.toUpperCase() ?? ''}
-        </Avatar>
+        />
         
         <Box sx={{ flex: 1 }}>
           <Box sx={{ 

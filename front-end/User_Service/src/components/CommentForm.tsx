@@ -13,6 +13,8 @@ import {
 } from '@mui/material';
 import { Send as SendIcon, Close as CloseIcon } from '@mui/icons-material';
 import { CREATE_COMMENT, UPDATE_COMMENT } from '../graphql/mutations';
+import { supabase } from '../lib/supabase';
+import UserAvatar from './UserAvatar'; // Add this import
 
 interface CommentFormProps {
   postId: string;
@@ -34,6 +36,27 @@ const CommentForm: React.FC<CommentFormProps> = ({
   const theme = useTheme();
   const [content, setContent] = useState(initialContent);
   const [error, setError] = useState<string | null>(null);
+  const [currentUser, setCurrentUser] = useState<any>(null);
+
+  // Fetch current user when the component mounts
+  React.useEffect(() => {
+    const fetchCurrentUser = async () => {
+      const { data } = await supabase.auth.getUser();
+      if (data?.user) {
+        const { data: userData } = await supabase
+          .from('accounts')
+          .select('id, first_name, last_name, profile_picture_url')
+          .eq('id', data.user.id)
+          .single();
+        
+        if (userData) {
+          setCurrentUser(userData);
+        }
+      }
+    };
+    
+    fetchCurrentUser();
+  }, []);
 
   // Create comment mutation
   const [createComment, { loading: createLoading }] = useMutation(CREATE_COMMENT, {
@@ -111,58 +134,73 @@ const CommentForm: React.FC<CommentFormProps> = ({
         </Alert>
       )}
       
-      <TextField
-        fullWidth
-        multiline
-        minRows={1}
-        maxRows={4}
-        variant="outlined"
-        placeholder={isEditing ? "Edit your comment..." : "Add a comment..."}
-        value={content}
-        onChange={(e) => setContent(e.target.value)}
-        disabled={loading}
-        sx={{ 
-          mb: 1,
-          '& .MuiOutlinedInput-root': {
-            borderRadius: 3,
-            bgcolor: 'rgba(0,0,0,0.02)',
-            transition: 'all 0.2s ease',
-            '&:hover': {
-              bgcolor: 'rgba(0,0,0,0.03)',
-            },
-            '&.Mui-focused': {
-              bgcolor: 'white',
+      <Box sx={{ display: 'flex', alignItems: 'flex-start' }}>
+        {/* Replace Avatar with UserAvatar */}
+        {currentUser && (
+          <UserAvatar 
+            userId={currentUser.id}
+            firstName={currentUser.first_name}
+            lastName={currentUser.last_name}
+            profilePictureUrl={currentUser.profile_picture_url}
+            size={32}
+            sx={{ 
+              mr: 1.5,
+            }}
+          />
+        )}
+        <TextField
+          fullWidth
+          multiline
+          minRows={1}
+          maxRows={4}
+          variant="outlined"
+          placeholder={isEditing ? "Edit your comment..." : "Add a comment..."}
+          value={content}
+          onChange={(e) => setContent(e.target.value)}
+          disabled={loading}
+          sx={{ 
+            mb: 1,
+            '& .MuiOutlinedInput-root': {
+              borderRadius: 3,
+              bgcolor: 'rgba(0,0,0,0.02)',
+              transition: 'all 0.2s ease',
+              '&:hover': {
+                bgcolor: 'rgba(0,0,0,0.03)',
+              },
+              '&.Mui-focused': {
+                bgcolor: 'white',
+              }
             }
-          }
-        }}
-        InputProps={{
-          endAdornment: (
-            <InputAdornment position="end">
-              {content.trim() && (
-                <IconButton 
-                  type="submit"
-                  disabled={loading || !content.trim()}
-                  size="small"
-                  color="primary"
-                  sx={{
-                    mr: 0.5,
-                    transition: 'all 0.2s ease',
-                    '&:hover': {
-                      transform: 'scale(1.1)'
-                    }
-                  }}
-                >
-                  {loading ? (
-                    <CircularProgress size={20} color="inherit" />
-                  ) : (
-                    <SendIcon fontSize="small" />
-                  )}
-                </IconButton>
-              )}
-            </InputAdornment>
-          )
-        }}
-      />
+          }}
+          InputProps={{
+            endAdornment: (
+              <InputAdornment position="end">
+                {content.trim() && (
+                  <IconButton 
+                    type="submit"
+                    disabled={loading || !content.trim()}
+                    size="small"
+                    color="primary"
+                    sx={{
+                      mr: 0.5,
+                      transition: 'all 0.2s ease',
+                      '&:hover': {
+                        transform: 'scale(1.1)'
+                      }
+                    }}
+                  >
+                    {loading ? (
+                      <CircularProgress size={20} color="inherit" />
+                    ) : (
+                      <SendIcon fontSize="small" />
+                    )}
+                  </IconButton>
+                )}
+              </InputAdornment>
+            )
+          }}
+        />
+      </Box>
       
       {isEditing && (
         <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 1 }}>

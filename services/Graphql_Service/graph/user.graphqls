@@ -5,6 +5,12 @@ type Account {
   email: String!
   firstName: String!
   lastName: String!
+  middleName: String
+  username: String
+  bio: String
+  profilePictureURL: String
+  bannerPictureURL: String
+  dateOfBirth: String
   address: String
   phone: String
   age: Int!
@@ -19,6 +25,8 @@ input RegisterInput {
   password: String!
   firstName: String!
   lastName: String!
+  middleName: String
+  username: String
   address: String
   phone: String
   age: Int!
@@ -33,6 +41,20 @@ extend type Mutation {
 
   "Allows the logged-in user to unfollow another user."
   unfollowUser(userIdToUnfollow: ID!): Account! # Returns the account being unfollowed
+  
+  "Updates the user's profile."
+  updateProfile(
+    username: String
+    firstName: String
+    lastName: String
+    middleName: String
+    bio: String
+    profilePictureUrl: String
+    bannerPictureUrl: String
+    dateOfBirth: String
+    address: String
+    phone: String
+  ): Account!
 }
 
 extend type Query {

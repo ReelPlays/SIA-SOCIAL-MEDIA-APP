@@ -4,12 +4,12 @@ import { useQuery } from '@apollo/client';
 import {
   Box,
   Typography,
-  Avatar,
   CircularProgress,
   useTheme
 } from '@mui/material';
 import { formatDistanceToNow } from 'date-fns';
 import { GET_POST_COMMENTS } from '../graphql/queries';
+import UserAvatar from './UserAvatar'; // Add this import
 
 interface Comment {
   commentId: string;
@@ -71,16 +71,17 @@ const PostComments: React.FC<PostCommentsProps> = ({ postId }) => {
               alignItems: 'flex-start'
             }}
           >
-            <Avatar 
+            {/* Replace Avatar with UserAvatar */}
+            <UserAvatar 
+              userId={comment.author.accountId}
+              firstName={comment.author.firstName}
+              lastName={comment.author.lastName}
+              size={32}
               sx={{ 
-                width: 32, 
-                height: 32,
                 mr: 1.5,
                 bgcolor: theme.palette.primary.main
               }}
-            >
-              {comment.author.firstName[0]}{comment.author.lastName[0]}
-            </Avatar>
+            />
             <Box>
               <Box sx={{ 
                 bgcolor: 'rgba(0,0,0,0.04)', 

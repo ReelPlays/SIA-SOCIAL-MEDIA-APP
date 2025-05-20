@@ -205,6 +205,203 @@ func (r *mutationResolver) UnfollowUser(ctx context.Context, userIDToUnfollow st
 	return &unfollowedAccount, nil
 }
 
+// UpdateProfile is the resolver for the updateProfile field.
+func (r *mutationResolver) UpdateProfile(ctx context.Context, username *string, firstName *string, lastName *string, middleName *string, bio *string, profilePictureURL *string, bannerPictureURL *string, dateOfBirth *string, address *string, phone *string) (*model.Account, error) {
+	// Get the current user ID
+	currentUserID, err := getCurrentUserID(ctx)
+	if err != nil {
+		log.Printf("UpdateProfile Error: Not authenticated: %v", err)
+		return nil, fmt.Errorf("authentication required")
+	}
+
+	db, err := getDB()
+	if err != nil {
+		log.Printf("UpdateProfile DB Error: %v", err)
+		return nil, fmt.Errorf("internal server error")
+	}
+	defer db.Close()
+
+	// Build the SET part of the SQL query
+	queryBuilder := "UPDATE accounts SET "
+	args := []interface{}{}
+	argIndex := 1
+	needsComma := false
+
+	// Only add fields that are being updated
+	if username != nil {
+		queryBuilder += fmt.Sprintf("username = $%d", argIndex)
+		args = append(args, *username)
+		argIndex++
+		needsComma = true
+	}
+
+	if firstName != nil {
+		if needsComma {
+			queryBuilder += ", "
+		}
+		queryBuilder += fmt.Sprintf("first_name = $%d", argIndex)
+		args = append(args, *firstName)
+		argIndex++
+		needsComma = true
+	}
+
+	if lastName != nil {
+		if needsComma {
+			queryBuilder += ", "
+		}
+		queryBuilder += fmt.Sprintf("last_name = $%d", argIndex)
+		args = append(args, *lastName)
+		argIndex++
+		needsComma = true
+	}
+
+	if middleName != nil {
+		if needsComma {
+			queryBuilder += ", "
+		}
+		queryBuilder += fmt.Sprintf("middle_name = $%d", argIndex)
+		args = append(args, *middleName)
+		argIndex++
+		needsComma = true
+	}
+
+	if bio != nil {
+		if needsComma {
+			queryBuilder += ", "
+		}
+		queryBuilder += fmt.Sprintf("bio = $%d", argIndex)
+		args = append(args, *bio)
+		argIndex++
+		needsComma = true
+	}
+
+	if profilePictureURL != nil {
+		if needsComma {
+			queryBuilder += ", "
+		}
+		queryBuilder += fmt.Sprintf("profile_picture_url = $%d", argIndex)
+		args = append(args, *profilePictureURL)
+		argIndex++
+		needsComma = true
+	}
+
+	if bannerPictureURL != nil {
+		if needsComma {
+			queryBuilder += ", "
+		}
+		queryBuilder += fmt.Sprintf("banner_picture_url = $%d", argIndex)
+		args = append(args, *bannerPictureURL)
+		argIndex++
+		needsComma = true
+	}
+
+	if dateOfBirth != nil {
+		if needsComma {
+			queryBuilder += ", "
+		}
+		queryBuilder += fmt.Sprintf("date_of_birth = $%d", argIndex)
+		args = append(args, *dateOfBirth)
+		argIndex++
+		needsComma = true
+	}
+
+	if address != nil {
+		if needsComma {
+			queryBuilder += ", "
+		}
+		queryBuilder += fmt.Sprintf("address = $%d", argIndex)
+		args = append(args, *address)
+		argIndex++
+		needsComma = true
+	}
+
+	if phone != nil {
+		if needsComma {
+			queryBuilder += ", "
+		}
+		queryBuilder += fmt.Sprintf("phone = $%d", argIndex)
+		args = append(args, *phone)
+		argIndex++
+		needsComma = true
+	}
+
+	// Always update the updated_at timestamp
+	if needsComma {
+		queryBuilder += ", "
+	}
+	queryBuilder += "updated_at = NOW()"
+	needsComma = true
+
+	// Add WHERE clause
+	queryBuilder += fmt.Sprintf(" WHERE id = $%d RETURNING id, email, first_name, last_name, middle_name, username, bio, profile_picture_url, banner_picture_url, date_of_birth, address, phone, age, gender, created_at, updated_at", argIndex)
+	args = append(args, currentUserID)
+
+	// Execute the update
+	updateCtx, cancelUpdate := context.WithTimeout(ctx, 5*time.Second)
+	defer cancelUpdate()
+
+	var account model.Account
+	var email, firstName2, lastName2 string
+	var middleName2, username2, bio2, profilePictureUrl2, bannerPictureUrl2 sql.NullString
+	var dateOfBirth2, address2, phone2, gender2 sql.NullString
+	var age int32
+	var createdAt time.Time
+	var updatedAt sql.NullTime
+
+	err = db.QueryRowContext(updateCtx, queryBuilder, args...).Scan(
+		&account.AccountID, &email, &firstName2, &lastName2, &middleName2, &username2, &bio2,
+		&profilePictureUrl2, &bannerPictureUrl2, &dateOfBirth2, &address2, &phone2, &age, &gender2,
+		&createdAt, &updatedAt,
+	)
+
+	if err != nil {
+		log.Printf("UpdateProfile DB Error executing update: %v", err)
+		return nil, fmt.Errorf("failed to update profile: %v", err)
+	}
+
+	// Set the account fields from the database results
+	account.Email = email
+	account.FirstName = firstName2
+	account.LastName = lastName2
+	account.Age = age
+	account.CreatedAt = createdAt.Format(time.RFC3339)
+
+	if updatedAt.Valid {
+		updatedAtStr := updatedAt.Time.Format(time.RFC3339)
+		account.UpdatedAt = &updatedAtStr
+	}
+
+	if middleName2.Valid {
+		account.MiddleName = &middleName2.String
+	}
+	if username2.Valid {
+		account.Username = &username2.String
+	}
+	if bio2.Valid {
+		account.Bio = &bio2.String
+	}
+	if profilePictureUrl2.Valid {
+		account.ProfilePictureURL = &profilePictureUrl2.String // Corrected field name
+	}
+	if bannerPictureUrl2.Valid {
+		account.BannerPictureURL = &bannerPictureUrl2.String // Corrected field name
+	}
+	if dateOfBirth2.Valid {
+		account.DateOfBirth = &dateOfBirth2.String
+	}
+	if address2.Valid {
+		account.Address = &address2.String
+	}
+	if phone2.Valid {
+		account.Phone = &phone2.String
+	}
+	if gender2.Valid {
+		account.Gender = &gender2.String
+	}
+
+	return &account, nil
+}
+
 // GetAccount is the resolver for the getAccount field.
 func (r *queryResolver) GetAccount(ctx context.Context, accountID string) (*model.Account, error) {
 	db, err := getDB()
