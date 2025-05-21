@@ -74,10 +74,10 @@ export const UPDATE_PROFILE = gql`
     $middleName: String
     $bio: String
     $profilePictureURL: String
-    $bannerPictureURL: String
     $dateOfBirth: String
     $address: String
     $phone: String
+    $gender: String  
   ) {
     updateProfile(
       username: $username
@@ -86,10 +86,10 @@ export const UPDATE_PROFILE = gql`
       middleName: $middleName
       bio: $bio
       profilePictureURL: $profilePictureURL
-      bannerPictureURL: $bannerPictureURL
       dateOfBirth: $dateOfBirth
       address: $address
       phone: $phone
+      gender: $gender 
     ) {
       accountId
       username
@@ -98,10 +98,10 @@ export const UPDATE_PROFILE = gql`
       middleName
       bio
       profilePictureURL
-      bannerPictureURL
       dateOfBirth
       address
       phone
+      gender 
     }
   }
 `;

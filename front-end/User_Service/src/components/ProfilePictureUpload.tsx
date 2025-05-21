@@ -155,10 +155,13 @@ export default function ProfilePictureUpload({
       setSelectedImage(null);
       setSelectedFile(null);
       
-    } catch (error: any) {
-      console.error('Error uploading profile picture:', error);
-      setError(error.message || 'Failed to upload profile picture');
-    } finally {
+    } catch (error) {
+  // Improved error handling
+  console.error('Error uploading profile picture:', error);
+  setError(typeof error === 'object' && error !== null && 'message' in error 
+    ? (error as Error).message 
+    : 'Failed to upload profile picture');
+}finally {
       setIsUploading(false);
     }
   };
