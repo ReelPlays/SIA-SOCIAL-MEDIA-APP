@@ -46,6 +46,7 @@ interface Post {
 interface Account {
   id: string;
   first_name: string;
+  username: string;
   last_name: string;
   email: string;
   profile_picture_url?: string;
@@ -102,7 +103,7 @@ export default function Posts() {
       if (user) {
         const { data, error } = await supabase
           .from("accounts")
-          .select("id, first_name, last_name, email, profile_picture_url")
+          .select("id, first_name, last_name, username, email, profile_picture_url")
           .eq("id", user.id)
           .single();
         if (error) throw error;
@@ -413,7 +414,6 @@ export default function Posts() {
   const navigationItems = [
     { icon: <HomeIcon />, label: 'Home', action: () => navigate('/posts') },
     { icon: <PersonIcon />, label: 'Profile', action: () => navigate('/profile') },
-    { icon: <BookmarkIcon />, label: 'Saved Posts', action: () => {} },
   ];
 
   return (
@@ -478,7 +478,7 @@ export default function Posts() {
                       {currentUser.first_name} {currentUser.last_name}
                     </Typography>
                     <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-                      @{currentUser.first_name.toLowerCase() + currentUser.last_name.toLowerCase()}
+                      @{currentUser.username}
                     </Typography>
                     
                     <Button
@@ -506,7 +506,7 @@ export default function Posts() {
                 boxShadow: '0 2px 12px rgba(0,0,0,0.08)',
                 overflow: 'hidden'
               }}>
-                <CardContent sx={{ p: 0 }}>
+                <CardContent sx={{ p: 0, height: 81 }}>
                   {navigationItems.map((item, index) => (
                     <Box key={index}>
                       <Button

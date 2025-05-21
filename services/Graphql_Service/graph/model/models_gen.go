@@ -43,6 +43,20 @@ type CreatePostInput struct {
 	AuthorID string `json:"authorId"`
 }
 
+type CreateProfileInput struct {
+	Username          string  `json:"username"`
+	Email             string  `json:"email"`
+	Password          string  `json:"password"`
+	FirstName         *string `json:"firstName,omitempty"`
+	MiddleName        *string `json:"middleName,omitempty"`
+	LastName          *string `json:"lastName,omitempty"`
+	Bio               *string `json:"bio,omitempty"`
+	ProfilePictureURL *string `json:"profilePictureUrl,omitempty"`
+	BannerPictureURL  *string `json:"bannerPictureUrl,omitempty"`
+	DateOfBirth       *string `json:"dateOfBirth,omitempty"`
+	Address           *string `json:"address,omitempty"`
+}
+
 type Mutation struct {
 }
 
@@ -74,6 +88,21 @@ type Post struct {
 	UpdatedAt     *string    `json:"updatedAt,omitempty"`
 	LikesCount    int32      `json:"likesCount"`
 	IsLiked       bool       `json:"isLiked"`
+}
+
+type Profile struct {
+	ProfileID         string  `json:"profileId"`
+	Username          string  `json:"username"`
+	Email             string  `json:"email"`
+	Password          string  `json:"password"`
+	FirstName         *string `json:"firstName,omitempty"`
+	MiddleName        *string `json:"middleName,omitempty"`
+	LastName          *string `json:"lastName,omitempty"`
+	Bio               *string `json:"bio,omitempty"`
+	ProfilePictureURL *string `json:"profilePictureUrl,omitempty"`
+	BannerPictureURL  *string `json:"bannerPictureUrl,omitempty"`
+	DateOfBirth       *string `json:"dateOfBirth,omitempty"`
+	Address           *string `json:"address,omitempty"`
 }
 
 type Query struct {

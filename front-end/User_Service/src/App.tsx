@@ -114,7 +114,7 @@ function App() {
                 <Route path="/profile" element={<Profile />} />
                 <Route path="/posts" element={<Posts />} />
                 <Route path="/notifications" element={<NotificationsPage />} />
-                <Route path="/" element={<Navigate to="/posts" replace />} />
+                <Route path="/" element={<Navigate to="/login" replace />} />
               </Routes>
             </Box>
           </Router>

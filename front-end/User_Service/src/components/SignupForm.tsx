@@ -61,7 +61,7 @@ export const SignupForm: React.FC = () => {
   return (
     <>
       {/* Navigation Bar */}
-      <AppBar position="fixed" sx={{ backgroundColor: 'white', boxShadow: 1 }}>
+      <AppBar position="fixed" sx={{ backgroundColor: 'white', boxShadow: 1}}>
         <Toolbar>
           <Typography variant="h6" component="div" sx={{ flexGrow: 1, color: '#815DAB', fontWeight: 'bold' }}>
             ConnectMe
