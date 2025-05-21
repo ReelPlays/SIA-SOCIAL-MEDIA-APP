@@ -101,7 +101,7 @@ The GraphQL server should now be running at http://localhost:8080, and the Graph
 
 ```bash
 cd SocMed/front-end/User_Service
-npm install
+npm install react-markdown @apollo/client @supabase/supabase-js date-fns @mui/material @mui/icons-material @emotion/react @emotion/styled react-router-dom
 npm run dev
 ```
 
